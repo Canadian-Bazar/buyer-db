@@ -1,4 +1,4 @@
-import { redisClient, REDIS_KEYS } from '../../config/redis.config.js';
+import { redisClient, REDIS_KEYS } from './redis.config.js';
 
 /**
  * Increment category view count in Redis
@@ -108,6 +108,10 @@ export async function getCategoryStats(categoryId) {
     throw error;
   }
 }
+
+
+
+
 
 export default {
   incrementCategoryView,

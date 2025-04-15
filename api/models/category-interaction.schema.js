@@ -23,7 +23,7 @@ const CategoryInteractionSchema = new mongoose.Schema({
             return new Date(Date.now() + 90 * 24 * 60 * 60 * 1000); 
         }
     }
-}, { timestamps: true });
+}, { timestamps: true  , collection:'CategoryInteraction'});
 
 // Compound index for queries and uniqueness
 CategoryInteractionSchema.index({ userId: 1, categoryId: 1 }, { unique: true });

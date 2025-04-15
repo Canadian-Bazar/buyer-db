@@ -2,27 +2,35 @@
 import { matchedData } from 'express-validator';
 import mongoose from 'mongoose';
 import CategoryStats from '../models/category.stats.schema.js';
-import CategoryInteraction from '../models/category.interaction.schema.js';
+import CategoryInteraction from '../models/category-interaction.schema.js';
 import handleError from '../utils/handleError.js';
 import httpStatus from 'http-status';
 import buildResponse from '../utils/buildResponse.js';
 import buildErrorObject from '../utils/buildErrorObject.js';
-import categoryRedisService from '../services/redis/category.redis.service.js';
-import userInteractionRedisService from '../services/redis/user.interaction.redis.service.js';
+import categoryRedisService from '../redis/category-stats.redis.js';
+import userInteractionRedisService from '../redis/category-interaction.redis.js';
+
+
+
+/*
+This Function will give all categories with search
+**/
+
 
 /**
  * This function will track category view
  */
 export const trackCategoryView = async(req, res) => {
   try {
-    const { categoryId } = req.params;
+    const validatedData = matchedData(req)
+    const { categoryId } = validatedData;
     const userId = req.user?._id;
     
-    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) { 
       throw buildErrorObject(httpStatus.BAD_REQUEST, 'Invalid Category ID');
     }
     
-    // Track in Redis for batch processing
+   
     await categoryRedisService.incrementCategoryView(categoryId);
     
     // Track user-specific interaction if user is logged in
@@ -41,7 +49,8 @@ export const trackCategoryView = async(req, res) => {
  */
 export const trackCategorySearch = async(req, res) => {
   try {
-    const { categoryId } = req.params;
+    const validatedData = matchedData(req)
+    const { categoryId } = validatedData;
     const userId = req.user?._id;
     
     if (!mongoose.Types.ObjectId.isValid(categoryId)) {
@@ -52,6 +61,7 @@ export const trackCategorySearch = async(req, res) => {
     await categoryRedisService.incrementCategorySearch(categoryId);
     
     // Track user-specific interaction if user is logged in
+    console.log(userId)
     if (userId) {
       await userInteractionRedisService.trackUserCategoryInteraction(userId, categoryId, 'search');
     }
@@ -152,7 +162,7 @@ export const getUserFrequentCategories = async(req, res) => {
     const skip = (page - 1) * limit;
     
     const result = await CategoryInteraction.aggregate([
-      { $match: { userId: mongoose.Types.ObjectId(userId) } },
+      { $match: { userId: new mongoose.Types.ObjectId(userId) } },
       {
         $lookup: {
           from: 'Category',
@@ -192,6 +202,8 @@ export const getUserFrequentCategories = async(req, res) => {
         }
       }
     ]);
+
+    console.log(result)
     
     const categories = result[0].categories;
     const totalCount = result[0].totalCount[0]?.count || 0;

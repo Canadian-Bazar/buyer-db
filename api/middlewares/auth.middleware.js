@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 
 import buildErrorObject from '../utils/buildErrorObject.js'
 import decrypt from '../utils/decrypt.js'
+import handleError from '../utils/handleError.js'
 
 
 /**
@@ -44,7 +45,7 @@ export const requireAuth =(req , res , next)=>{
     })
 
   }catch(err){
-    throw buildErrorObject(httpStatus.INTERNAL_SERVER_ERROR , 'INTERNAL SERVER ERROR')
+    handleError(res , err)
 
   }
 }

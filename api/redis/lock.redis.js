@@ -1,4 +1,4 @@
-import { redisClient, REDIS_KEYS } from '../../config/redis.config.js';
+import { redisClient, REDIS_KEYS } from './redis.config.js';
 
 /**
  * Acquire a distributed lock using Redis

@@ -20,6 +20,8 @@ import v1Routes from './api/routes/index.js'
 import buildErrorObject from './api/utils/buildErrorObject.js'
 import init from './config/mongo.js'
 import sessionManager from './config/sessionManager.js'
+import { redisClient } from './api/redis/redis.config.js'
+import { scheduleAnalyticsCronJobs } from './api/cron/cron.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -88,7 +90,13 @@ init().then((dbStatus) => {
       .json(buildErrorObject(httpStatus.NOT_FOUND, 'URL_NOT_FOUND')),
   )
 
+
+
+
+
   const server = api.listen(process.env.PORT, () => {
+
+            
     const port = server.address().port
     console.log(chalk.cyan.bold('********************************'))
     console.log(chalk.green.bold('   🚀 Canadian Bazaar Buyer DB 🚀'))
@@ -101,6 +109,14 @@ init().then((dbStatus) => {
     console.log(chalk.cyan.bold('********************************'))
   })
 })
+
+
+redisClient.ping()
+                 .then(()=>{
+                  scheduleAnalyticsCronJobs()
+
+                 })
+
 
 // For testing
 export default api

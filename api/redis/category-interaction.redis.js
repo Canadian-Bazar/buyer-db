@@ -23,6 +23,7 @@ export async function trackUserCategoryInteraction(userId, categoryId, interacti
     
     
     await redisClient.hset(key, 'lastInteracted', Date.now());
+    console.log('hii')
     
     
     const ttl = await redisClient.ttl(key);
@@ -109,32 +110,6 @@ export async function getUserCategoryInteractions(userId) {
 
 
 
-// export async function getUserCategories(userId){
-//   try{
-
-//     const keys = await redisClient.keys(`${REDIS_KEYS.USER_CATEGORY_INTERACTION}${userId}:*`)
-
-//     const interactions =[]
-
-
-//     for (const key of keys){
-//       const categoryId = key.split(':').pop()
-//       const data = await redisClient.hgetall(key);
-      
-//       if (data) {
-//         interactions.push({
-//           categoryId,
-//           viewCount: parseInt(data.view || '0'),
-//           searchCount: parseInt(data.search || '0'),
-//           lastInteracted: data.lastInteracted ? new Date(parseInt(data.lastInteracted)) : new Date(),
-//         });
-//       }
-//     }
-    
-//     return interactions;
-
-//   }catch(err){}
-// }
 
 export default {
   trackUserCategoryInteraction,

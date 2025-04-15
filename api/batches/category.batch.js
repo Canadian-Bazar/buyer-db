@@ -1,8 +1,10 @@
 import mongoose from 'mongoose';
 import { redisClient, REDIS_KEYS } from '../redis/redis.config.js';
 import CategoryStats from '../models/category.stats.schema.js';
-import lockService from '../redis/lock.redis.service.js';
+import lockService from '../redis/lock.redis.js';
 import categoryRedisService from '../redis/category-stats.redis.js'
+import categoryInteractionRedis from '../redis/category-interaction.redis.js';
+import categoryStatsRedis from '../redis/category-stats.redis.js';
 
 /**
  * Process category stats from Redis to MongoDB
@@ -33,6 +35,7 @@ export async function processCategoryStats() {
     for (const key of searchKeys) {
       if (!key.includes(':daily:expiry') && !key.includes(':weekly:expiry')) {
         const categoryId = key.replace(REDIS_KEYS.CATEGORY_SEARCH, '');
+        console.log(categoryId)
         categoryIds.add(categoryId);
       }
     }
@@ -56,8 +59,7 @@ export async function processCategoryStats() {
         weeklySearches
       } = stats;
 
-      // Calculate popularity score using the formula
-      const popularityScore =
+            const popularityScore =
         (viewCount + searchCount * 2) * 0.6 +
         (weeklyViews + weeklySearches * 2) * 3 * 0.3 +
         (dailyViews + dailySearches * 2) * 7 * 0.1;
@@ -65,7 +67,7 @@ export async function processCategoryStats() {
       // Add to bulk operation
       bulkOps.push({
         updateOne: {
-          filter: { categoryId: mongoose.Types.ObjectId(categoryId) },
+          filter: { categoryId: new mongoose.Types.ObjectId(categoryId) },
           update: {
             $set: {
               viewCount,
@@ -97,6 +99,9 @@ export async function processCategoryStats() {
     await lockService.releaseProcessingLock('categoryStats', lockValue);
   }
 }
+
+
+
 
 /**
  * Reset daily counters

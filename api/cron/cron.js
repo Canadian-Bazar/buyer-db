@@ -1,33 +1,51 @@
 // src/cron/analytics.cron.js
 import cron from 'node-cron';
 import categoryBatchService from '../batches/category.batch.js';
-import userInteractionBatchService from '../services/batch/user.interaction.batch.service.js';
+import categoryInteractionBatchService from '../batches/category-interaction.batch.js'
+import productBatch from '../batches/product.batch.js';
 
 /**
  * Schedule all analytics-related cron jobs
  */
 export function scheduleAnalyticsCronJobs() {
   // Process category stats every 15 minutes
-  cron.schedule('*/15 * * * *', async () => {
+  // cron.schedule('*/15 * * * *', async () => {
+  //   console.log('Running category stats batch processing...');
+  //   try {
+  //     await categoryBatchService.processCategoryStats();
+  //   } catch (error) {
+  //     console.error('Error in category stats cron job', error);
+  //   }
+  // });
+  
+  // // Process user interactions every 30 minutes
+  // cron.schedule('*/30 * * * *', async () => {
+  //   console.log('Running user interactions batch processing...');
+  //   try {
+  //     await categoryInteractionBatchService.processUserInteractions();
+  //   } catch (error) {
+  //     console.error('Error in user interactions cron job', error);
+  //   }
+  // });
+
+  setInterval(async () => {
     console.log('Running category stats batch processing...');
     try {
       await categoryBatchService.processCategoryStats();
     } catch (error) {
-      console.error('Error in category stats cron job', error);
+      console.error('Error in category stats batch', error);
     }
-  });
+  }, 15 * 1000); 
   
-  // Process user interactions every 30 minutes
-  cron.schedule('*/30 * * * *', async () => {
+  setInterval(async () => {
     console.log('Running user interactions batch processing...');
     try {
-      await userInteractionBatchService.processUserInteractions();
+      await categoryInteractionBatchService.processUserInteractions();
     } catch (error) {
-      console.error('Error in user interactions cron job', error);
+      console.error('Error in user interactions batch', error);
     }
-  });
+  }, 15 * 1000); 
   
-  // Reset daily counters at 12:01 AM
   cron.schedule('1 0 * * *', async () => {
     console.log('Running daily stats reset...');
     try {
@@ -37,7 +55,6 @@ export function scheduleAnalyticsCronJobs() {
     }
   });
   
-  // Reset weekly counters at 12:05 AM on Sunday
   cron.schedule('5 0 * * 0', async () => {
     console.log('Running weekly stats reset...');
     try {
@@ -51,11 +68,37 @@ export function scheduleAnalyticsCronJobs() {
   cron.schedule('0 2 * * *', async () => {
     console.log('Running expired interactions cleanup...');
     try {
-      await userInteractionBatchService.cleanupExpiredInteractions();
+      await categoryInteractionBatchService.cleanupExpiredInteractions();
     } catch (error) {
       console.error('Error in interactions cleanup cron job', error);
     }
   });
+
+
+
+  // cron.schedule('*/15 * * * *', async () => {
+  //   console.log('Running product activity batch processing...');
+  //   try {
+  //     await productBatchService.processProductActivity();
+  //   } catch (error) {
+  //     console.error('Error in product activity cron job', error);
+  //   }
+  // });
+
+
+  setInterval(
+    async () =>{
+      try{
+         await productBatch.processProductActivity();
+
+
+      }catch(err){
+        console.error('Error in processing interactions')
+
+      }
+    } , 15*1000
+
+  )
   
   console.log('Analytics cron jobs scheduled successfully');
 }
