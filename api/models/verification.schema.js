@@ -1,25 +1,40 @@
 import mongoose from 'mongoose'
-import paginate from 'mongoose-paginate-v2'
 
-const VerificationsSchema = new mongoose.Schema(
-  {
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      index: true,
-    },
-    otp: { type: Number, required: true },
-    validTill: { type: Date, required: true },
-  },
-  {
-    versionKey: false,
-    timestamps: true,
-    collection: 'Verifications',
-    expires:30*5*60
-  }
-)
+const VerificationSchema = new mongoose.Schema({
+    email:{
+        type:String ,
+        trim:true ,
+        lowercase:true ,
+        index:true
+        
+    } ,
+    phoneNumber:{
+        type:String ,
+        trim:true ,
+        index:true
+    } ,
 
-VerificationsSchema.plugin(paginate)
+    isEmailVerified:{
+        type:Boolean ,
+        required:true ,
+        default:false
+    } ,
+    isPhoneNumberVerified:{
+       type:Boolean ,
+        required:true ,
+        default:false
+    } ,
 
-export default mongoose.model('Verifications', VerificationsSchema)
+    emailOtp:{
+        type:String ,
+        trim:true
+    } ,
+
+    phoneOtp:{
+        type:String ,
+        trim:true
+    } ,
+} , {collection:'Verifications' , timestamps:true , expireAfterSeconds:3600})
+
+
+export default mongoose.model('Verifications' , VerificationSchema)

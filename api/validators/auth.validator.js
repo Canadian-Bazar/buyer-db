@@ -1,6 +1,8 @@
 import { check } from 'express-validator'
 
 import validateRequest from '../utils/validateRequest.js'
+import validator from 'validator';
+
 
 export const signupValidator = [
   check('fullName')
@@ -9,17 +11,17 @@ export const signupValidator = [
     .not()
     .isEmpty()
     .withMessage('Full Name Cannot Be Empty')
-    .isAlphanumeric()
-    .withMessage('Name cannot contain numbers'),
+    .isAlpha('en-US', { ignore: ' ' }).withMessage('Name must contain only letters and spaces') ,
+    
 
-  check('email')
-    .exists()
-    .withMessage('Email Is Required')
-    .not()
-    .isEmpty()
-    .withMessage('Email Cannot Be Empty')
-    .isEmail()
-    .withMessage('Email is invalid'),
+  // check('email')
+  //   .exists()
+  //   .withMessage('Email Is Required')
+  //   .not()
+  //   .isEmpty()
+  //   .withMessage('Email Cannot Be Empty')
+  //   .isEmail()
+  //   .withMessage('Email is invalid'),
 
   check('phoneNumber')
     .exists()
@@ -36,18 +38,56 @@ export const signupValidator = [
       'Password must conntain one digit , one special character , one uppercase letter with minimum length 8',
     ),
 
+    check('confirmPassword')
+    .isStrongPassword()
+    .withMessage(
+      'Password must conntain one digit , one special character , one uppercase letter with minimum length 8',
+    ),
+
+    check('city')
+    .exists()
+    .withMessage('City is required')
+    .not()
+    .isEmpty()
+    .withMessage('City cannot be empty') ,
+
+
+    check('state')
+    .exists()
+    .withMessage('State is required')
+    .not()
+    .isEmpty()
+    .withMessage('State cannot be empty') ,
+    check('otp')
+
+    .exists()
+    .withMessage('OTP is required')
+    .not()
+    .isEmpty()
+    .withMessage('OTP cannot be empty')
+    .isLength({ min:  6, max: 6 })
+    .withMessage('Invalid OTP')
+    .isNumeric()
+    .withMessage('Invalid OTP'),
+
   (req, res, next) => validateRequest(req, res, next),
 ]
 
 export const loginValidator = [
-  check('email')
-    .exists()
-    .withMessage('Email Is Required')
-    .not()
-    .isEmpty()
-    .withMessage('Email cannot be empty')
-    .isEmail()
-    .withMessage('Invalid Email'),
+  check('uid')
+  .exists().withMessage('Login Credentials Missing')
+  .notEmpty().withMessage('Credentials Cannot Be Empty')
+  .custom((value) => {
+    const isNanoId = /^[0-9]{12}$/.test(value);
+    const isEmail = validator.isEmail(value);
+    const isCanadianPhone = validator.isMobilePhone(value, 'en-CA'); // built-in
+
+    if (isNanoId || isEmail || isCanadianPhone) {
+      return true;
+    }
+
+    throw new Error('Invalid credentials');
+  }),
 
   check('password')
     .exists()
@@ -60,12 +100,12 @@ export const loginValidator = [
 ]
 
 export const sendOtpvalidator = [
-  check('email')
+  check('phoneNumber')
     .exists()
-    .withMessage('Email is required')
+    .withMessage('Phone Number is required')
     .not()
     .isEmpty()
-    .withMessage('Email cannot be empty'),
+    .withMessage('Phone Number cannot be empty'),
 
   (req, res, next) => validateRequest(req, res, next)
 ]

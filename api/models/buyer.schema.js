@@ -3,7 +3,7 @@ import mongoose from 'mongoose'
 import aggregatePaginate from 'mongoose-aggregate-paginate-v2'
 import paginate from 'mongoose-paginate-v2'
 
-const UserSchema = new mongoose.Schema(
+const BuyerSchema = new mongoose.Schema(
   {
     fullName: {
       type: String,
@@ -11,9 +11,15 @@ const UserSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: true,
-      unique: true,
       index: true,
+      unique: true,
+    },
+
+    phoneNumber:{
+      type:String ,
+      required:true ,
+      unique:true ,
+      index:true ,
     },
     password: {
       type: String,
@@ -35,29 +41,32 @@ const UserSchema = new mongoose.Schema(
     blockExpires: {
       type: Date,
       default: new Date(), 
-      select: false }
-    ,
-    phoneNumber:{
-      type:String , 
-      required:true
+      select: false 
     }
+    ,
+    city:{
+      type:String ,
+      required:true 
+    } ,
+    state:{
+      type:String ,
+      required:true 
+    } ,
+
+    memberId:{
+      type:String , 
+      unique:true ,
+      index:true
+    }
+   
   },
 
  
-  { timestamps: true, collection: 'Users' } )
+  { timestamps: true, collection: 'Buyer' } )
 
-UserSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next()
 
-  try {
-    this.password = await bcrypt.hash(this.password, 10)
-    next()
-  } catch (error) {
-    next(error)
-  }
-})
 
-UserSchema.plugin(paginate)
-UserSchema.plugin(aggregatePaginate)
+  BuyerSchema.plugin(paginate)
+  BuyerSchema.plugin(aggregatePaginate)
 
-export default mongoose.model('User', UserSchema)
+export default mongoose.model('Buyer', BuyerSchema)

@@ -1,3 +1,4 @@
+
 import bcrypt from 'bcrypt'
 import { matchedData } from 'express-validator'
 import httpStatus from 'http-status'
@@ -6,7 +7,8 @@ import otpGenerator  from 'otp-generator'
 
 import sendMail from '../helpers/sendMail.js'
 import Roles from '../models/role.schema.js'
-import User from '../models/user.schema.js'
+import Buyer  from '../models/buyer.schema.js'
+
 import Verifications from '../models/verification.schema.js'
 import buildErrorObject from '../utils/buildErrorObject.js'
 import buildResponse from '../utils/buildResponse.js'
@@ -15,6 +17,7 @@ import generateForgotToken from '../utils/generate-forgot-token.js'
 import generateTokens from '../utils/generateTokens.js'
 import handleError from '../utils/handleError.js'
 import isIDGood from '../utils/isIDGood.js'
+import sendSMS from '../helpers/sendTextMessage.js'
 
 /**
  * Controller: signupController
@@ -38,21 +41,40 @@ import isIDGood from '../utils/isIDGood.js'
 export const signupController = async (req, res) => {
   try {
     req = matchedData(req)
-    const existingUser = await User.findOne({ email: req.email }).lean()
+    const existingUser = await Buyer.findOne({ phoneNumber: req.phoneNumber }).lean()
     if (existingUser?._id) {
       throw buildErrorObject(httpStatus.CONFLICT, 'User Already Exists')
     }
+    if(req.password!== req.confirmPassword){
+      throw buildErrorObject(httpStatus.CONFLICT, 'Password and Confirm Password do not match')
+    }
 
-    const userRole = await Roles.findOne({ role: 'user' }).lean()
+    req.password = await bcrypt.hash(req.password, 10)
+
+
+
+    const verification = await Verifications.findOne({ phoneNumber: req.phoneNumber }).lean()
+    if (!verification) {
+      throw buildErrorObject(httpStatus.NOT_FOUND, 'No OTP found for this phone number. Please request a new OTP.')
+    }
+
+    console.log(verification)
+    if (parseInt(req.otp) !== parseInt(verification.phoneOtp)) {
+      throw buildErrorObject(httpStatus.UNAUTHORIZED, 'The OTP you entered is incorrect. Please try again.')
+    }
+   
+    const userRole = await Roles.findOne({ role: 'buyer' }).lean()
     if (!userRole) {
       throw buildErrorObject(
         httpStatus.INTERNAL_SERVER_ERROR,
         'Unable to assign user role. Please try again later.'
       )
     }
+
+
     req.roleId = userRole._id
 
-    await User.create(req)
+    await Buyer.create(req)
 
     res.status(httpStatus.CREATED).json(buildResponse(httpStatus.CREATED, {
      
@@ -86,7 +108,13 @@ export const signupController = async (req, res) => {
 export const loginController = async (req, res) => {
   try {
     req = matchedData(req)
-    let user = await User.findOne({ email: req.email }).select('password loginAttempts blockExpires')
+    let user = await Buyer.findOne({
+      $or:[
+        { email: req.uid },
+        { phoneNumber: req.uid } ,
+        {memberId:req.uid}
+      ]
+    }).select('password loginAttempts blockExpires')
 
     if (!user?._id) {
       throw buildErrorObject(httpStatus.UNAUTHORIZED, 'No Such User Exists')
@@ -116,7 +144,7 @@ export const loginController = async (req, res) => {
     }
     user.loginAttempts = 0
     await user.save()
-    user = await User.findById(user._id).lean()
+    user = await Buyer.findById(user._id).lean()
     const { accessToken, refreshToken } = generateTokens(user)
     res
       .cookie('accessToken', accessToken, {
@@ -212,9 +240,10 @@ export const verifyTokensController = async (req, res) => {
 
           user = {
             _id: user._id,
-            email: user.email,
+            email: user?.email,
             fullName: user.fullName,
             roleId: user.roleId,
+            phoneNumber: user.phoneNumber,
           }
 
           const { accessToken } = generateTokens(user)
@@ -277,15 +306,15 @@ export const sendOtpController = async (req, res) => {
   try {
     const requestData = matchedData(req)
 
-    const user = await User.findOne({
-      email: requestData.email.toString(),
+    const user = await Buyer.findOne({
+      phoneNumber: requestData.phoneNumber,
     }).lean()
     if (user?._id) {
       throw buildErrorObject(httpStatus.CONFLICT, 'User Already Exists')
     }
 
 
-    const otp = otpGenerator.generate(4, {
+    const otp = otpGenerator.generate(6, {
       lowerCaseAlphabets: false,
       upperCaseAlphabets: false,
       specialChars: false,
@@ -295,14 +324,13 @@ export const sendOtpController = async (req, res) => {
     const validTill = new Date(new Date().getTime() + 30 * 60000)
 
 
-    sendMail(requestData.email, 'register.ejs', {
-      subject: 'Verification OTP',
-      otp,
-    })
+    // await sendSMS(otp ,requestData.phoneNumber)
+
+    console.log(otp , requestData.phoneNumber)
 
     await Verifications.findOneAndUpdate(
-      { email: requestData.email },
-      { otp, validTill },
+      { phoneNumber: requestData.phoneNumber },
+      { phoneOtp:otp },
       { upsert: true }
     )
 
@@ -424,7 +452,7 @@ export const generateForgotPasswordTokenController = async(req , res)=>{
 
     req=matchedData(req)
 
-    const user = await User.findOne({email:req.email}).select('_id email').lean()
+    const user = await Buyer.findOne({email:req.email}).select('_id email').lean()
     console.log(user)
     const forgotPasswordToken = generateForgotToken(user) 
 
@@ -501,8 +529,10 @@ export const resetPasswordController = async(req , res)=>{
     }
 
     const userId = await isIDGood(user._id)
-    user = await User.findById(userId)
-    user.password = newPassword
+    user = await Buyer.findById(userId)
+
+    const hashedpassword = await bcrypt.hash(newPassword , 10)
+    user.password = hashedpassword
     await user.save()
 
     res.status(httpStatus.ACCEPTED).json(
@@ -517,5 +547,3 @@ export const resetPasswordController = async(req , res)=>{
     handleError(res ,err)
   }
 }
-
-

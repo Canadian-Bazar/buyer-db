@@ -42,7 +42,7 @@ init().then((dbStatus) => {
     collection: 'Sessions',
   })
 
-  verifyAWSConnection()
+  // verifyAWSConnection()
 
 
   api.use(bodyParser.json({ limit: '32mb' }))
@@ -91,7 +91,7 @@ init().then((dbStatus) => {
   const server = api.listen(process.env.PORT, () => {
     const port = server.address().port
     console.log(chalk.cyan.bold('********************************'))
-    console.log(chalk.green.bold('   🚀 Server Information 🚀'))
+    console.log(chalk.green.bold('   🚀 Canadian Bazaar Buyer DB 🚀'))
     console.log(chalk.cyan.bold('********************************'))
     console.log(chalk.yellow.bold('Api Name:    Server'))
     console.log(chalk.yellow.bold(`Port:        ${port}`))
