@@ -232,7 +232,29 @@ const ProductSchema = new mongoose.Schema({
   maxPrice:{
     type:Number ,
     required:true
-  }
+  } ,
+  moq:{
+    type:Number ,
+    required:true ,
+    default:1
+  } ,
+  category:{
+    type:mongoose.Types.ObjectId ,
+    ref:'Category',
+    required:true
+  } ,
+  isVerified:{
+    type:Boolean ,
+    default:false ,
+    required:true
+} ,
+deliveryDays:{
+  type:Number ,
+  required:true,
+  default:1
+}
+
+
   
 
 }, { timestamps: true , collection:"Product" } );

@@ -25,7 +25,7 @@ const ProductPricingSchema = new mongoose.Schema({
       },
       max: {
         type: Number,
-        required: true
+        required: false
       },
       price: {
         type: Number,
@@ -44,8 +44,7 @@ const ProductPricingSchema = new mongoose.Schema({
       },
       unit: {
         type: String,
-        enum: ['hours', 'days', 'weeks'],
-        default: 'days'
+        
       }
     },
     // isOnSale: {

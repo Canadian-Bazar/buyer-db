@@ -59,6 +59,19 @@ const SellerSchema = new mongoose.Schema({
     } ,
     profileImage:{
         type:String
+    }   ,
+    city:{
+      type:String ,
+      required:true 
+    } ,
+    state:{
+      type:String ,
+      required:true 
+    } ,
+    isVerified:{
+        type:Boolean ,
+        default:false ,
+        required:true
     }
 
   } , {

@@ -6,16 +6,18 @@ const LikedSchema = new mongoose.Schema({
     productId:{
         type:mongoose.Types.ObjectId ,
         ref:'Product' , 
-        required:true 
+        required:true  ,
+        index:true
     } ,
     buyerId:{
-        type:mongoose.Types.Object ,
+        type:mongoose.Types.ObjectId ,
         ref:'Buyer' ,
-        required:true
+        required:true ,
+        index:true
     }
-} , {
+} , { 
     timestamps:true ,
-    collection:true
+    collection:'Liked'
 })
 
 LikedSchema.plugin(paginate)
