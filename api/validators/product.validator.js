@@ -62,3 +62,32 @@ export const validateGetProducts=[
     (req , res ,next)=>validateRequest(req , res , next)
     
 ]
+
+export const validateGetProductInfo=[
+    param('slug')
+    .exists()
+    .withMessage('Slug is required') 
+    .notEmpty()
+    .withMessage('Slug should not be empty')
+    .isString()
+    .withMessage('Slug should be a string')
+    .isSlug()
+    .withMessage('Invalid Slug') ,
+
+    (req , res , next)=>validateRequest(req , res , next)
+
+
+]
+
+
+export const validateGetProductDescription = [
+    param('productId')
+    .exists()
+    .withMessage('Product Id is required') 
+    .notEmpty()
+    .withMessage('Product Id should not be empty')
+    .isMongoId()
+    .withMessage('Invalid Product Id') ,
+
+    (req , res , next)=>validateRequest(req , res , next)
+]

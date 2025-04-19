@@ -17,7 +17,7 @@ import generateForgotToken from '../utils/generate-forgot-token.js'
 import generateTokens from '../utils/generateTokens.js'
 import handleError from '../utils/handleError.js'
 import isIDGood from '../utils/isIDGood.js'
-import sendSMS from '../helpers/sendTextMessage.js'
+import {sendTextMessage} from '../helpers/sendTextMessage.js'
 
 /**
  * Controller: signupController
@@ -238,13 +238,15 @@ export const verifyTokensController = async (req, res) => {
         try {
           let user = jwt.verify(refreshToken, process.env.REFRESH_SECRET)
 
-          user = {
-            _id: user._id,
-            email: user?.email,
-            fullName: user.fullName,
-            roleId: user.roleId,
-            phoneNumber: user.phoneNumber,
-          }
+          user = await Buyer.findById(user._id).lean()
+
+          // user = {
+          //   _id: user._id,
+          //   email: user?.email,
+          //   fullName: user.fullName,
+          //   roleId: user.roleId,
+          //   phoneNumber: user.phoneNumber,
+          // }
 
           const { accessToken } = generateTokens(user)
 
@@ -324,7 +326,7 @@ export const sendOtpController = async (req, res) => {
     const validTill = new Date(new Date().getTime() + 30 * 60000)
 
 
-    // await sendSMS(otp ,requestData.phoneNumber)
+    await sendTextMessage( requestData.phoneNumber , otp)
 
     console.log(otp , requestData.phoneNumber)
 

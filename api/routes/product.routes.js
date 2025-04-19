@@ -17,4 +17,22 @@ router.get(
 )
 
 
+router.get(
+    '/:slug/info' ,
+    trimRequest.all ,
+    optionalAuth ,
+    productValidators.validateGetProductInfo ,
+    productControllers.getProductInfoController
+)
+
+
+router.get(
+    '/:productId/description' ,
+    trimRequest.all ,
+    optionalAuth ,
+    productValidators.validateGetProductDescription,
+    productControllers.getProductDescriptionController
+)
+
+
 export default router

@@ -18,17 +18,23 @@ const ProductVariationSchema = new mongoose.Schema({
     },
     values: [String]
   }],
-//   variantCombinations: [{
-//     combination: {
-//       type: Map,
-//       of: String
-//     },
-//     sku: String,
-//     price: Number,
-//     stock: Number,
-//     images: [String]
-//   }]
-} , {collection:'ProductVariation' , timestamps:true});
+  customizableOptions: [
+    {
+      option: String,
+      quantity: Number
+    }
+  ]
+  // variantCombinations: [{
+  //   combination: {
+  //     type: Map,
+  //     of: String
+  //   },
+  //   sku: String,
+  //   price: Number,
+  //   stock: Number,
+  //   images: [String]
+  // }]
+}, { collection: 'ProductVariation', timestamps: true });
 
 ProductVariationSchema.plugin(paginate)
 ProductVariationSchema.plugin(aggregatePaginate)

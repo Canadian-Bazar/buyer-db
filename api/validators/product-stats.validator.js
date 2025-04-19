@@ -42,3 +42,9 @@ export const validateTrackProductView = [
   ]
 
 
+  export const validateGetNewArrivals =[
+    ...paginationValidator ,
+    (req , res, next) => validateRequest(req , res  , next)
+  ]
+
+

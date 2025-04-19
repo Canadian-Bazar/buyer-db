@@ -36,4 +36,11 @@ router.put(
     productStatsController.trackQuotationStatus
 )
 
+router.get(
+    '/new-arrivals' ,
+    trimRequest.all ,
+    productStatsValidator.validateGetNewArrivals ,
+    productStatsController.getNewArrivalProducts
+)
+
 export default router

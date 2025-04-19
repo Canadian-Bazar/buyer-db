@@ -6,6 +6,7 @@ import { matchedData } from 'express-validator';
 import buildErrorObject from '../utils/buildErrorObject.js';
 import buildResponse from '../utils/buildResponse.js';
 import  handleError  from '../utils/handleError.js';
+import Product from '../models/products.schema.js';
 
 /**
  * Track product view
@@ -109,7 +110,6 @@ export const getBestsellerProducts = async (req, res) => {
     
     const skip = (page - 1) * limit;
     
-    // Get total count
     const totalCount = await ProductStats.countDocuments({
       acceptedQuotationCount: { $gt: 0 }
     });
@@ -121,7 +121,11 @@ export const getBestsellerProducts = async (req, res) => {
       .sort({ bestsellerScore: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('productId', 'name description images categoryId seller priceRange')
+      .populate({
+      path: 'productId',
+      select: 'name description images categoryId seller minPrice maxPrice moq slug',
+      populate: { path: 'seller' , select:"companyName city state" }
+      })
       .lean();
       
     const docs = bestsellers.map(stats => ({
@@ -214,6 +218,49 @@ export const getProductsByCategoryWithAnalytics = async (req, res) => {
   }
 };
 
+
+
+export const getNewArrivalProducts = async (req, res) => {
+  try {
+
+    const validatedData = matchedData(req);
+    const page = parseInt(validatedData.page || '1');
+    const limit = parseInt(validatedData.limit || '10');
+
+    if (page < 1) {
+      throw buildErrorObject(httpStatus.BAD_REQUEST, 'Page must be greater than 0');
+    }
+
+    const skip = (page - 1) * limit;
+
+    const totalCount = await Product.countDocuments();
+    const totalPages = Math.ceil(totalCount / limit);
+
+    const newArrivalProducts = await Product.find()
+      .select('moq name description images categoryId seller minPrice maxPrice slug')
+      .populate(
+       { path: 'seller' , select:"companyName city state" }
+      )
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+
+    const response = {
+      docs:newArrivalProducts,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
+      totalPages,
+      totalCount,
+      page
+    };
+
+    res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, response));
+  } catch (err) {
+    handleError(res, err);
+  }
+}
 export default {
   trackProductView,
   trackQuotationStatus,
