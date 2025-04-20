@@ -18,7 +18,7 @@ import generateTokens from '../utils/generateTokens.js'
 import handleError from '../utils/handleError.js'
 import isIDGood from '../utils/isIDGood.js'
 import {sendTextMessage} from '../helpers/sendTextMessage.js'
-
+import { nanoid } from 'nanoid'
 /**
  * Controller: signupController
  * Description: Handles user registration by creating a new user in the database.
@@ -33,10 +33,13 @@ import {sendTextMessage} from '../helpers/sendTextMessage.js'
  * 
  * Steps:
  * 1. Validate the request data.
- * 2. Check if the user already exists based on email.
- * 3. Assign the default role (user) to the new user.
- * 4. Create the user and save it in the database.
- * 5. Respond with success or error message.
+ * 2. Check if the user already exists based on phoneNumber.
+ * 3. Ensure password and confirmPassword match.
+ * 4. Verify the provided OTP.
+ * 5. Generate a unique memberId using nanoid.
+ * 6. Assign the default role (buyer) to the new user.
+ * 7. Create the user and save it in the database.
+ * 8. Respond with success or error message.
  */
 export const signupController = async (req, res) => {
   try {
@@ -45,13 +48,11 @@ export const signupController = async (req, res) => {
     if (existingUser?._id) {
       throw buildErrorObject(httpStatus.CONFLICT, 'User Already Exists')
     }
-    if(req.password!== req.confirmPassword){
+    if (req.password !== req.confirmPassword) {
       throw buildErrorObject(httpStatus.CONFLICT, 'Password and Confirm Password do not match')
     }
 
     req.password = await bcrypt.hash(req.password, 10)
-
-
 
     const verification = await Verifications.findOne({ phoneNumber: req.phoneNumber }).lean()
     if (!verification) {
@@ -62,7 +63,19 @@ export const signupController = async (req, res) => {
     if (parseInt(req.otp) !== parseInt(verification.phoneOtp)) {
       throw buildErrorObject(httpStatus.UNAUTHORIZED, 'The OTP you entered is incorrect. Please try again.')
     }
-   
+    
+    // Generate a unique memberId using nanoid
+    let unique = false
+    let memberId
+    while (!unique) {
+      memberId = nanoid()
+      const existingMember = await Buyer.findOne({ memberId }).lean()
+      if (!existingMember) {
+        unique = true
+      }
+    }
+    req.memberId = memberId
+
     const userRole = await Roles.findOne({ role: 'buyer' }).lean()
     if (!userRole) {
       throw buildErrorObject(
@@ -71,13 +84,11 @@ export const signupController = async (req, res) => {
       )
     }
 
-
     req.roleId = userRole._id
 
     await Buyer.create(req)
 
     res.status(httpStatus.CREATED).json(buildResponse(httpStatus.CREATED, {
-     
       message: 'User Created Successfully',
     }))
   } catch (err) {

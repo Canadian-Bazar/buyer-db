@@ -75,25 +75,24 @@ export const signupValidator = [
 
 export const loginValidator = [
   check('uid')
-  .exists().withMessage('Login Credentials Missing')
-  .notEmpty().withMessage('Credentials Cannot Be Empty')
-  .custom((value) => {
-    const isNanoId = /^[0-9]{12}$/.test(value);
-    const isEmail = validator.isEmail(value);
-    const isCanadianPhone = validator.isMobilePhone(value, 'en-CA'); // built-in
+    .exists().withMessage('Login Credentials Missing')
+    .notEmpty().withMessage('Credentials Cannot Be Empty')
+    .custom((value) => {
+      const isNanoId = /^(?=.{21}$)[A-Za-z0-9_-]+$/.test(value);
+      const isEmail = validator.isEmail(value);
+      const isCanadianPhone = validator.isMobilePhone(value, 'en-CA');
 
-    if (isNanoId || isEmail || isCanadianPhone) {
-      return true;
-    }
+      if (isNanoId || isEmail || isCanadianPhone) {
+        return true;
+      }
 
-    throw new Error('Invalid credentials');
-  }),
+      throw new Error('Invalid credentials');
+    }),
 
   check('password')
     .exists()
     .withMessage('Password is required')
-    .not()
-    .isEmpty()
+    .notEmpty()
     .withMessage('Password cannot be empty'),
 
   (req, res, next) => validateRequest(req, res, next)
