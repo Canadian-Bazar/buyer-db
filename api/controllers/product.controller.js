@@ -94,13 +94,19 @@ export const getProductsController = async (req, res) => {
     if (Object.keys(sellerMatch).length > 0) {
       pipeline.push({ $match: sellerMatch });
     }
+
+    console.log(validatedData?.subcategories, 'Subcategories');
     
     if (validatedData?.subcategories && Array.isArray(validatedData.subcategories) && validatedData.subcategories.length > 0) {
       const subcategoryIds = validatedData.subcategories.map(id => new mongoose.Types.ObjectId(id));
+
+      console.log(subcategoryIds, 'Subcategory IDs');
       pipeline.push({ 
-        $match: { categories: { $in: subcategoryIds } } 
+$match: { categoryId: { $in: subcategoryIds } }
       });
     }
+
+    console.log(pipeline)
     
     pipeline.push({
       $addFields: {

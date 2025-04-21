@@ -22,6 +22,7 @@ export const REDIS_KEYS={
   USER_CATEGORY_INTERACTION: 'user:category:',
   PROCESSING_LOCK: 'analytics:processing:lock' ,
   PRODUCT_ACTIVITY: 'product:activity:',
+  LIKE_BATCH:'product:like:'
 
 };
 

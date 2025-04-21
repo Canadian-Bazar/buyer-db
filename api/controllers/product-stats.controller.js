@@ -71,15 +71,17 @@ export const getPopularProducts = async (req, res) => {
       .sort({ popularityScore: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('productId', 'name description images categoryId seller priceRange')
+      .populate({
+      path: 'productId',
+      select:"-_id -category -v" ,
+      populate: {
+        path: 'seller',
+        select: 'companyName city state'
+      }
+      })
       .lean();
       
-    const docs = popularProducts.map(stats => ({
-      product: stats.productId,
-      viewCount: stats.viewCount,
-      quotationCount: stats.quotationCount,
-      popularityScore: stats.popularityScore
-    }));
+    const docs = popularProducts.map(stats => stats.productId);
     
     const response = {
       docs,
@@ -111,31 +113,23 @@ export const getBestsellerProducts = async (req, res) => {
     const skip = (page - 1) * limit;
     
     const totalCount = await ProductStats.countDocuments({
-      acceptedQuotationCount: { $gt: 0 }
+      acceptedQuotationCount: { $gte: 0 }
     });
     const totalPages = Math.ceil(totalCount / limit);
     
     const bestsellers = await ProductStats.find({
-      acceptedQuotationCount: { $gt: 0 }
+      acceptedQuotationCount: { $gte: 0 }
     })
       .sort({ bestsellerScore: -1 })
       .skip(skip)
       .limit(limit)
       .populate({
       path: 'productId',
-      select: 'name description images categoryId seller minPrice maxPrice moq slug',
       populate: { path: 'seller' , select:"companyName city state" }
       })
       .lean();
       
-    const docs = bestsellers.map(stats => ({
-      product: stats.productId,
-      quotationCount: stats.quotationCount,
-      acceptedQuotationCount: stats.acceptedQuotationCount,
-      acceptanceRate: stats.quotationCount > 0 ? 
-        (stats.acceptedQuotationCount / stats.quotationCount) : 0,
-      bestsellerScore: stats.bestsellerScore
-    }));
+    const docs = bestsellers.map(stats => stats.productId);
     
     const response = {
       docs,

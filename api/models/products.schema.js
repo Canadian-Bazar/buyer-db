@@ -31,7 +31,7 @@ const ProductSchema = new mongoose.Schema({
     required: true
   },
   seller: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Types.ObjectId,
     ref: 'Seller',
     required: true,
     index: true
@@ -59,7 +59,7 @@ const ProductSchema = new mongoose.Schema({
     required:true ,
     default:1
   } ,
-  category:{
+  categoryId:{
     type:mongoose.Types.ObjectId ,
     ref:'Category',
     required:true
