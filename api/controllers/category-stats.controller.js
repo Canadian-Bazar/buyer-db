@@ -150,73 +150,119 @@ export const getPopularCategories = async(req, res) => {
  */
 export const getUserFrequentCategories = async(req, res) => {
   try {
-    const userId = req.user._id;
     const validatedData = matchedData(req);
+    const userId = req.user?._id;
     
-    if (!userId) {
-      throw buildErrorObject(httpStatus.UNAUTHORIZED, 'You must be logged in to access this resource');
+    // Set default pagination values
+    const page = Math.max(validatedData.page || 1, 1);
+    const limit = Math.min(validatedData.limit || 15, 15);
+    const search = validatedData.search || '';
+    
+    let allCategories = [];
+    let frequentCategoryIds = [];
+    let frequentCategoriesCount = 0;
+    
+    // Step 1: If user is logged in, try to fetch their frequent categories first
+    if (userId) {
+      const userFrequentResult = await CategoryInteraction.aggregate([
+        { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+        {
+          $lookup: {
+            from: 'Category',
+            foreignField: '_id',
+            localField: 'categoryId',
+            as: 'category'
+          }
+        },
+        { $unwind: '$category' },
+        {
+          $addFields: {
+            interactionScore: { $add: ['$viewCount', { $multiply: ['$searchCount', 2] }] }
+          }
+        },
+        { $sort: { interactionScore: -1 } },
+        { $limit: 15 }, // Get up to 15 to have enough
+        {
+          $project: {
+            _id: '$category._id',
+            name: '$category.name',
+            description: '$category.description',
+            image: '$category.image',
+            viewCount: 1,
+            searchCount: 1,
+            lastInteracted: 1
+          }
+        }
+      ]);
+      
+      if (userFrequentResult && userFrequentResult.length > 0) {
+        allCategories = userFrequentResult;
+        frequentCategoryIds = userFrequentResult.map(cat => cat._id);
+        frequentCategoriesCount = userFrequentResult.length;
+      }
     }
     
-    const page = Math.max(validatedData.page || 1, 1);
-    const limit = Math.min(validatedData.limit || 10, 15);
-    const skip = (page - 1) * limit;
+    // Step 2: Calculate how many more categories we need
+    const remainingNeeded = 15 - allCategories.length;
     
-    const result = await CategoryInteraction.aggregate([
-      { $match: { userId: new mongoose.Types.ObjectId(userId) } },
-      {
-        $lookup: {
-          from: 'Category',
-          foreignField: '_id',
-          localField: 'categoryId',
-          as: 'category'
-        }
-      },
-      { $unwind: '$category' },
-      {
-        $addFields: {
-          interactionScore: { $add: ['$viewCount', { $multiply: ['$searchCount', 2] }] }
-        }
-      },
-      {
-        $facet: {
-          categories: [
-            { $sort: { interactionScore: -1 } },
-            { $skip: skip },
-            { $limit: limit },
-            {
-              $project: {
-                categoryId: 1,
-                name: '$category.name',
-                description: '$category.description',
-                image: '$category.image',
-                viewCount: 1,
-                searchCount: 1,
-                lastInteracted: 1,
-                interactionScore: 1
-              }
-            }
-          ],
-          totalCount: [
-            { $count: 'count' }
-          ]
-        }
+    // Step 3: Fetch popular categories excluding the ones we already have
+    if (remainingNeeded > 0) {
+      const matchStage = {};
+      if (search) {
+        matchStage['category.name'] = { $regex: search, $options: 'i' };
       }
-    ]);
-
-    console.log(result)
+      
+      // Exclude categories we already have
+      if (frequentCategoryIds.length > 0) {
+        matchStage['category._id'] = { $nin: frequentCategoryIds };
+      }
+      
+      const popularResult = await CategoryStats.aggregate([
+        {
+          $lookup: {
+            from: 'Category',
+            foreignField: '_id',
+            localField: 'categoryId',
+            as: 'category'
+          }
+        },
+        { $unwind: '$category' },
+        { $match: matchStage },
+        { $sort: { popularityScore: -1 } },
+        { $limit: remainingNeeded },
+        {
+          $project: {
+            _id: '$category._id',
+            name: '$category.name',
+            description: '$category.description',
+            image: '$category.image',
+            popularityScore: 1,
+            viewCount: 1,
+            searchCount: 1
+          }
+        }
+      ]);
+      
+      if (popularResult && popularResult.length > 0) {
+        allCategories = [...allCategories, ...popularResult];
+      }
+    }
     
-    const categories = result[0].categories;
-    const totalCount = result[0].totalCount[0]?.count || 0;
+    // Determine the type based on number of frequent categories
+    let type = "categories you may like";
+    if (userId && frequentCategoriesCount >= 7) {
+      type = "frequently searched";
+    }
     
-    const totalPages = Math.ceil(totalCount / limit);
-    
+    // Create the response with a single array and a type
     const response = {
-      docs: categories,
-      hasNext: page < totalPages,
-      hasPrev: page > 1,
-      totalPages,
-      totalCount,
-      page
+      docs: allCategories,
+      type: type,
+      totalCount: allCategories.length,
+      page: page,
+      totalPages: 1, // Since we're sending a max of 15 items, it's one page
+      hasNext: false,
+      hasPrev: false
     };
     
     res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, response));

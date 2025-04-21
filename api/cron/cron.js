@@ -3,6 +3,7 @@ import cron from 'node-cron';
 import categoryBatchService from '../batches/category.batch.js';
 import categoryInteractionBatchService from '../batches/category-interaction.batch.js'
 import productBatch from '../batches/product.batch.js';
+import likeBatch from '../batches/like.batch.js'
 
 /**
  * Schedule all analytics-related cron jobs
@@ -29,7 +30,6 @@ export function scheduleAnalyticsCronJobs() {
   // });
 
   setInterval(async () => {
-    console.log('Running category stats batch processing...');
     try {
       await categoryBatchService.processCategoryStats();
     } catch (error) {
@@ -38,7 +38,6 @@ export function scheduleAnalyticsCronJobs() {
   }, 15 * 1000); 
   
   setInterval(async () => {
-    console.log('Running user interactions batch processing...');
     try {
       await categoryInteractionBatchService.processUserInteractions();
     } catch (error) {
@@ -47,7 +46,6 @@ export function scheduleAnalyticsCronJobs() {
   }, 15 * 1000); 
   
   cron.schedule('1 0 * * *', async () => {
-    console.log('Running daily stats reset...');
     try {
       await categoryBatchService.resetDailyCounters();
     } catch (error) {
@@ -56,7 +54,6 @@ export function scheduleAnalyticsCronJobs() {
   });
   
   cron.schedule('5 0 * * 0', async () => {
-    console.log('Running weekly stats reset...');
     try {
       await categoryBatchService.resetWeeklyCounters();
     } catch (error) {
@@ -66,7 +63,6 @@ export function scheduleAnalyticsCronJobs() {
   
   // Clean up expired user interactions once a day at 2:00 AM
   cron.schedule('0 2 * * *', async () => {
-    console.log('Running expired interactions cleanup...');
     try {
       await categoryInteractionBatchService.cleanupExpiredInteractions();
     } catch (error) {
@@ -90,6 +86,20 @@ export function scheduleAnalyticsCronJobs() {
     async () =>{
       try{
          await productBatch.processProductActivity();
+
+
+      }catch(err){
+        console.error('Error in processing interactions')
+
+      }
+    } , 15*1000
+
+  )
+
+  setInterval(
+    async () =>{
+      try{
+         await likeBatch.processBatchLikes()
 
 
       }catch(err){

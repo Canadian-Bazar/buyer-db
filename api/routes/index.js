@@ -5,6 +5,7 @@ import  categoryStatsRoutes from './category-stats.routes.js'
 import productStatsRoutes from './product-stats.routes.js'
 import productRoutes from './product.routes.js'
 import categoryRoutes from './category.routes.js'
+import likeRoutes from './like.routes.js'
 
 const v1Routes = express.Router()
 const router = express.Router()
@@ -15,6 +16,7 @@ v1Routes.use('/category-stats' , categoryStatsRoutes)
 v1Routes.use('/product-stats' , productStatsRoutes)
 v1Routes.use('/product' , productRoutes)
 v1Routes.use('/category' , categoryRoutes)
+v1Routes.use('/like' , likeRoutes)
 
 router.use('/api/v1', v1Routes)
 

@@ -7,6 +7,7 @@ import buildErrorObject from '../utils/buildErrorObject.js';
 import buildResponse from '../utils/buildResponse.js';
 import  handleError  from '../utils/handleError.js';
 import Product from '../models/products.schema.js';
+import { REDIS_KEYS, redisClient } from '../redis/redis.config.js';
 
 /**
  * Track product view
@@ -56,6 +57,7 @@ export const getPopularProducts = async (req, res) => {
   try {
     const page = parseInt(req.query.page || '1');
     const limit = parseInt(req.query.limit || '10');
+    const userId = req.user ? req.user._id : null;
     
     if (page < 1) {
       throw buildErrorObject(httpStatus.BAD_REQUEST, 'Page must be greater than 0');
@@ -63,28 +65,142 @@ export const getPopularProducts = async (req, res) => {
     
     const skip = (page - 1) * limit;
     
-    // Get total count
+    const pipeline = [
+      { $sort: { popularityScore: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      
+      {
+        $lookup: {
+          from: 'Product',
+          localField: 'productId',
+          foreignField: '_id',
+          as: 'product'
+        }
+      },
+      { $unwind: '$product' },
+      
+      {
+        $lookup: {
+          from: 'Sellers',
+          localField: 'product.seller',
+          foreignField: '_id',
+          as: 'seller'
+        }
+      },
+      { $unwind: '$seller' },
+      
+      {
+        $lookup: {
+          from: 'Category',
+          localField: 'product.categoryId',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
+    ];
+    
+    if (userId) {
+      pipeline.push({
+        $lookup: {
+          from: 'Liked',
+          let: { productId: '$product._id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$productId', '$$productId'] },
+                    { $eq: ['$buyerId', new mongoose.Types.ObjectId(userId)] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: 'liked'
+        }
+      });
+    }
+    
+    pipeline.push({
+      $addFields: {
+        productIdString: { $toString: '$product._id' },
+        isLiked: userId ? { $cond: [{ $gt: [{ $size: '$liked' }, 0] }, true, false] } : false
+      }
+    });
+    
+    pipeline.push({
+      $project: {
+        _id: '$product._id',
+        name: '$product.name',
+        slug: '$product.slug',
+        images: '$product.images',
+        avgRating: '$product.avgRating',
+        ratingsCount: '$product.ratingsCount',
+        isCustomizable: '$product.isCustomizable',
+        isVerified: '$product.isVerified',
+        seller: {
+          _id: '$seller._id',
+          companyName: '$seller.companyName',
+          city: '$seller.city',
+          state: '$seller.state'
+        },
+        category: {
+          _id: '$category._id',
+          name: '$category.name',
+          description: '$category.description'
+        },
+        isLiked: 1,
+        productIdString: 1
+      }
+    });
+    
     const totalCount = await ProductStats.countDocuments();
     const totalPages = Math.ceil(totalCount / limit);
     
-    const popularProducts = await ProductStats.find()
-      .sort({ popularityScore: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate({
-      path: 'productId',
-      select:"-_id -category -v" ,
-      populate: {
-        path: 'seller',
-        select: 'companyName city state'
+    let products = await ProductStats.aggregate(pipeline);
+    
+    if (userId && products.length > 0) {
+      try {
+        const redisKeys = products.map(product => 
+          REDIS_KEYS.LIKE_BATCH + product.productIdString + ':' + userId.toString()
+        );
+        
+        const pipeline = redisClient.pipeline();
+        redisKeys.forEach(key => {
+          pipeline.hgetall(key);
+        });
+        
+        const redisResults = await pipeline.exec();
+        
+        for (let i = 0; i < products.length; i++) {
+          const likeData = redisResults[i][1];
+          
+          if (likeData && likeData.type) {
+            products[i].isLiked = likeData.type === 'like';
+          }
+          
+          delete products[i].productIdString;
+        }
+      } catch (redisErr) {
+        console.error('Error checking Redis for like statuses', { 
+          userId, 
+          error: redisErr.message 
+        });
+        
+        products.forEach(product => {
+          delete product.productIdString;
+        });
       }
-      })
-      .lean();
-      
-    const docs = popularProducts.map(stats => stats.productId);
+    } else {
+      products.forEach(product => {
+        delete product.productIdString;
+      });
+    }
     
     const response = {
-      docs,
+      docs: products,
       hasNext: page < totalPages,
       hasPrev: page > 1,
       totalPages,
@@ -98,13 +214,11 @@ export const getPopularProducts = async (req, res) => {
   }
 };
 
-/**
- * Get bestseller products with pagination
- */
 export const getBestsellerProducts = async (req, res) => {
   try {
     const page = parseInt(req.query.page || '1');
     const limit = parseInt(req.query.limit || '10');
+    const userId = req.user ? req.user._id : null;
     
     if (page < 1) {
       throw buildErrorObject(httpStatus.BAD_REQUEST, 'Page must be greater than 0');
@@ -112,27 +226,145 @@ export const getBestsellerProducts = async (req, res) => {
     
     const skip = (page - 1) * limit;
     
-    const totalCount = await ProductStats.countDocuments({
-      acceptedQuotationCount: { $gte: 0 }
+    const pipeline = [
+      { $match: { acceptedQuotationCount: { $gte: 0 } } },
+      { $sort: { bestsellerScore: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      
+      {
+        $lookup: {
+          from: 'Product',
+          localField: 'productId',
+          foreignField: '_id',
+          as: 'product'
+        }
+      },
+      { $unwind: '$product' },
+      
+      {
+        $lookup: {
+          from: 'Sellers',
+          localField: 'product.seller',
+          foreignField: '_id',
+          as: 'seller'
+        }
+      },
+      { $unwind: '$seller' },
+      
+      {
+        $lookup: {
+          from: 'Category',
+          localField: 'product.categoryId',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
+    ];
+    
+    if (userId) {
+      pipeline.push({
+        $lookup: {
+          from: 'Liked',
+          let: { productId: '$product._id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$productId', '$$productId'] },
+                    { $eq: ['$buyerId', new mongoose.Types.ObjectId(userId)] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: 'liked'
+        }
+      });
+    }
+    
+    pipeline.push({
+      $addFields: {
+        productIdString: { $toString: '$product._id' },
+        isLiked: userId ? { $cond: [{ $gt: [{ $size: '$liked' }, 0] }, true, false] } : false
+      }
+    });
+    
+    pipeline.push({
+      $project: {
+        _id: '$product._id',
+        name: '$product.name',
+        slug: '$product.slug',
+        images: '$product.images',
+        avgRating: '$product.avgRating',
+        ratingsCount: '$product.ratingsCount',
+        isCustomizable: '$product.isCustomizable',
+        isVerified: '$product.isVerified',
+        seller: {
+          _id: '$seller._id',
+          companyName: '$seller.companyName',
+          city: '$seller.city',
+          state: '$seller.state'
+        },
+        category: {
+          _id: '$category._id',
+          name: '$category.name',
+          description: '$category.description'
+        },
+        isLiked: 1,
+        productIdString: 1
+      }
+    });
+    
+    const totalCount = await ProductStats.countDocuments({ 
+      acceptedQuotationCount: { $gte: 0 } 
     });
     const totalPages = Math.ceil(totalCount / limit);
     
-    const bestsellers = await ProductStats.find({
-      acceptedQuotationCount: { $gte: 0 }
-    })
-      .sort({ bestsellerScore: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate({
-      path: 'productId',
-      populate: { path: 'seller' , select:"companyName city state" }
-      })
-      .lean();
-      
-    const docs = bestsellers.map(stats => stats.productId);
+    let products = await ProductStats.aggregate(pipeline);
+    
+    if (userId && products.length > 0) {
+      try {
+        const redisKeys = products.map(product => 
+          REDIS_KEYS.LIKE_BATCH + product.productIdString + ':' + userId.toString()
+        );
+        
+        const pipeline = redisClient.pipeline();
+        redisKeys.forEach(key => {
+          pipeline.hgetall(key);
+        });
+        
+        const redisResults = await pipeline.exec();
+        
+        for (let i = 0; i < products.length; i++) {
+          const likeData = redisResults[i][1];
+          
+          if (likeData && likeData.type) {
+            products[i].isLiked = likeData.type === 'like';
+          }
+          
+          delete products[i].productIdString;
+        }
+      } catch (redisErr) {
+        console.error('Error checking Redis for like statuses', { 
+          userId, 
+          error: redisErr.message 
+        });
+        
+        products.forEach(product => {
+          delete product.productIdString;
+        });
+      }
+    } else {
+      products.forEach(product => {
+        delete product.productIdString;
+      });
+    }
     
     const response = {
-      docs,
+      docs: products,
       hasNext: page < totalPages,
       hasPrev: page > 1,
       totalPages,
@@ -255,6 +487,9 @@ export const getNewArrivalProducts = async (req, res) => {
     handleError(res, err);
   }
 }
+
+
+
 export default {
   trackProductView,
   trackQuotationStatus,

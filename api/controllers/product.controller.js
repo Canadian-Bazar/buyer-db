@@ -9,6 +9,7 @@ import  httpStatus  from 'http-status';
 import buildResponse from '../utils/buildResponse.js';
 import buildErrorObject from '../utils/buildErrorObject.js';
 import path from 'path';
+import { REDIS_KEYS, redisClient } from '../redis/redis.config.js';
 
 
 
@@ -94,19 +95,13 @@ export const getProductsController = async (req, res) => {
     if (Object.keys(sellerMatch).length > 0) {
       pipeline.push({ $match: sellerMatch });
     }
-
-    console.log(validatedData?.subcategories, 'Subcategories');
     
     if (validatedData?.subcategories && Array.isArray(validatedData.subcategories) && validatedData.subcategories.length > 0) {
       const subcategoryIds = validatedData.subcategories.map(id => new mongoose.Types.ObjectId(id));
-
-      console.log(subcategoryIds, 'Subcategory IDs');
       pipeline.push({ 
-$match: { categoryId: { $in: subcategoryIds } }
+        $match: { categoryId: { $in: subcategoryIds } }
       });
     }
-
-    console.log(pipeline)
     
     pipeline.push({
       $addFields: {
@@ -182,7 +177,8 @@ $match: { categoryId: { $in: subcategoryIds } }
       
       pipeline.push({
         $addFields: {
-          isLiked: { $cond: [{ $gt: [{ $size: '$likedData' }, 0] }, true, false] }
+          isLiked: { $cond: [{ $gt: [{ $size: '$likedData' }, 0] }, true, false] },
+          productIdString: { $toString: '$_id' }
         }
       });
     } else {
@@ -198,22 +194,17 @@ $match: { categoryId: { $in: subcategoryIds } }
     
     let sortStage = {};
     
-    
     if (validatedData?.ratings) {
       const ratingsOrder = validatedData.ratings === 'asc' ? 1 : -1;
       sortStage = { $sort: { avgRating: ratingsOrder } };
     } else {
-     
       sortStage = { $sort: { avgRating: -1, ratingsCount: -1 } };
     }
     
     pipeline.push(sortStage);
-    
-   
     pipeline.push({ $skip: skip });
     pipeline.push({ $limit: limit });
     
-   
     pipeline.push({
       $project: {
         _id: 1,
@@ -227,10 +218,11 @@ $match: { categoryId: { $in: subcategoryIds } }
         maxPrice: '$calculatedMaxPrice',
         moq: 1,
         isLiked: 1,
+        productIdString: 1,
         hasUnlimitedTier: 1,
         tiersCount: 1,
         deliveryInfo: 1,
-        isCustomizable:1 ,
+        isCustomizable: 1,
         seller: {
           _id: '$sellerData._id',
           companyName: '$sellerData.companyName',
@@ -239,25 +231,57 @@ $match: { categoryId: { $in: subcategoryIds } }
       }
     });
     
-    
     const [countResult, products] = await Promise.all([
       Product.aggregate(countPipeline),
       Product.aggregate(pipeline)
     ]);
     
-    
     const totalProducts = countResult.length > 0 ? countResult[0].totalProducts : 0;
     const totalPages = Math.ceil(totalProducts / limit);
     
+    if (userId && products.length > 0) {
+      const productIds = products.map(product => product.productIdString);
+      const redisKeys = productIds.map(pid => REDIS_KEYS.LIKE_BATCH + pid + ':' + userId.toString());
+      
+      try {
+        const pipeline = redisClient.pipeline();
+        redisKeys.forEach(key => {
+          pipeline.hgetall(key);
+        });
+        
+        const redisResults = await pipeline.exec();
+        
+        for (let i = 0; i < products.length; i++) {
+          const likeData = redisResults[i][1]; // [err, result] format
+          
+          if (likeData && likeData.type) {
+            if (likeData.type === 'like') {
+              products[i].isLiked = true;
+            } else if (likeData.type === 'dislike') {
+              products[i].isLiked = false;
+            }
+          }
+          
+          delete products[i].productIdString;
+        }
+      } catch (redisErr) {
+        console.error('Error checking Redis for like statuses', { 
+          userId, 
+          error: redisErr.message 
+        });
+        
+        products.forEach(product => {
+          delete product.productIdString;
+        });
+      }
+    }
     
-    return res.status(httpStatus.OK).json(buildResponse(httpStatus.OK , {
+    return res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, {
       products,
       totalProducts,
       totalPages,
       currentPage: page
-
-    }
-    ));
+    }));
     
   } catch (err) {
     handleError(res, err);
@@ -270,7 +294,13 @@ export const getProductInfoController = async(req, res) => {
     const { slug } = validatedData;
     const userId = req.user ? req.user._id : null;
     
-    const pipeline = [      {
+    // Exit early if no product slug is provided
+    if (!slug) {
+      throw buildErrorObject(httpStatus.BAD_REQUEST, 'Product slug is required');
+    }
+    
+    const pipeline = [
+      {
         $match: {
           slug: slug,
           isActive: true
@@ -438,7 +468,6 @@ export const getProductInfoController = async(req, res) => {
             leadTime: { $arrayElemAt: ['$pricingData.leadTime', 0] }
           },
           
-         
           moq: { 
             $ifNull: [
               { 
@@ -500,39 +529,43 @@ export const getProductInfoController = async(req, res) => {
     
     const productInfo = await Product.aggregate(pipeline);
     
-    // Check if product exists
     if (!productInfo || productInfo.length === 0) {
       throw buildErrorObject(httpStatus.BAD_REQUEST, 'Invalid Product');
     }
-    
-    // Increment the view count in a separate operation (doesn't block the response)
-    // if (productInfo[0].statsCheck && productInfo[0].statsCheck.length > 0) {
-    //   // Update existing stats
-    //   ProductStats.updateOne(
-    //     { productId: productInfo[0]._id },
-    //     { 
-    //       $inc: { viewCount: 1 },
-    //       $set: { lastUpdated: new Date() }
+
+    // if (userId) {
+    //   const productId = productInfo[0]._id.toString();
+    //   const likeKey = REDIS_KEYS.LIKE_BATCH + productId + ':' + userId.toString();
+      
+    //   try {
+    //     const likeData = await redisClient.hgetall(likeKey);
+        
+    //     if (likeData && likeData.type) {
+    //       if (likeData.type === 'like') {
+    //         productInfo[0].isLiked = true;
+    //       } 
+    //       else if (likeData.type === 'dislike') {
+    //         productInfo[0].isLiked = false;
+    //       }
     //     }
-    //   ).exec();
-    // } else {
-    //   new ProductStats({
-    //     productId: productInfo[0]._id,
-    //     viewCount: 1
-    //   }).save();
+    //   } catch (redisErr) {
+    //     console.error('Error checking Redis for like status', { 
+    //       productId, 
+    //       userId, 
+    //       error: redisErr.message 
+    //     });
+    //     // Continue with the database result if Redis fails
+    //   }
     // }
     
-    // Remove the statsCheck field before sending the response
-
     delete productInfo[0].statsCheck;
-
     
     res.status(httpStatus.ACCEPTED).json(buildResponse(httpStatus.ACCEPTED, productInfo[0]));
     
   } catch (err) {
     handleError(res, err);
   }
-};;
+};
 
 
 

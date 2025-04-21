@@ -20,8 +20,8 @@ import v1Routes from './api/routes/index.js'
 import buildErrorObject from './api/utils/buildErrorObject.js'
 import init from './config/mongo.js'
 import sessionManager from './config/sessionManager.js'
-// import { redisClient } from './api/redis/redis.config.js'
-// import { scheduleAnalyticsCronJobs } from './api/cron/cron.js'
+import { redisClient } from './api/redis/redis.config.js'
+import { scheduleAnalyticsCronJobs } from './api/cron/cron.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -111,11 +111,11 @@ init().then((dbStatus) => {
 })
 
 
-// redisClient.ping()
-//                  .then(()=>{
-//                   scheduleAnalyticsCronJobs()
+redisClient.ping()
+                 .then(()=>{
+                  scheduleAnalyticsCronJobs()
 
-//                  })
+                 })
 
 
 // For testing
