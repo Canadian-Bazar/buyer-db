@@ -46,13 +46,20 @@ export const uploadFile = async (files) => {
         ContentType: file.mimetype, 
         ContentDisposition: 'inline', 
       };
-      return s3.send(new PutObjectCommand(uploadParams));
+      await s3.send(new PutObjectCommand(uploadParams));
+      
+      try {
+        fs.unlinkSync(file.path);
+      } catch (err) {
+        console.error(`Error deleting file ${file.path}:`, err.message);
+      }
+      
+      return `${file.filename}`;
     });
 
-    await Promise.all(uploadPromises);
-    const uploadedFiles = files.map((file) => `${file.filename}`);
+    const uploadedFiles = await Promise.all(uploadPromises);
     return uploadedFiles;
-  }catch(err){
+  } catch (err) {
     console.error('Error uploading file:', err.message);
     throw new Error('Error uploading file');
   }
