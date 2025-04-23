@@ -11,12 +11,12 @@ const client = twilio(accountSid, authToken)
 
 
 
-export const sendTextMessage = async (to, otp) => {
+export const sendTextMessage = async (to, otp , messageBody) => {
     try {
         console.log(accountSid ,authToken, twilioPhoneNumber)
         to="+91"+to
 
-        const body = `Your OTP to signup with Canadian Bazar is ${otp}. Do not share it with anyone.`;
+        const body= messageBody;
         const message = await client.messages.create({
             body,
             from: twilioPhoneNumber,

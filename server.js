@@ -15,13 +15,15 @@ import morgan from 'morgan'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-import { verifyAWSConnection } from './api/controllers/upload.controller.js'
 import v1Routes from './api/routes/index.js'
 import buildErrorObject from './api/utils/buildErrorObject.js'
 import init from './config/mongo.js'
 import sessionManager from './config/sessionManager.js'
-import { redisClient } from './api/redis/redis.config.js'
-import { scheduleAnalyticsCronJobs } from './api/cron/cron.js'
+import imageProxyRoutes from './api/routes/image-proxy.routes.js'
+// import { redisClient } from './api/redis/redis.config.js'
+// import { scheduleAnalyticsCronJobs } from './api/cron/cron.js'
+import { verifyAWSConnection } from './api/helpers/aws-s3.js'
+
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -44,7 +46,7 @@ init().then((dbStatus) => {
     collection: 'Sessions',
   })
 
-  // verifyAWSConnection()
+  verifyAWSConnection()
 
 
   api.use(bodyParser.json({ limit: '32mb' }))
@@ -77,6 +79,7 @@ init().then((dbStatus) => {
 
   
   api.use('', v1Routes)
+  api.use('/media', imageProxyRoutes)
 
   api.get('/', (_req, res) =>
     res
@@ -111,11 +114,11 @@ init().then((dbStatus) => {
 })
 
 
-redisClient.ping()
-                 .then(()=>{
-                  scheduleAnalyticsCronJobs()
+// redisClient.ping()
+//                  .then(()=>{
+//                   scheduleAnalyticsCronJobs()
 
-                 })
+//                  })
 
 
 // For testing

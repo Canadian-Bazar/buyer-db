@@ -9,7 +9,7 @@ const router = express.Router()
 
 
 router.get(
-    '/:parentCategoryId',
+    '/',
     trimRequest.all ,
     categoryValidators.validateGetSubCategories ,
     categoryControllers.getSubCategories

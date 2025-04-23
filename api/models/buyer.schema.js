@@ -57,6 +57,10 @@ const BuyerSchema = new mongoose.Schema(
       type:String , 
       unique:true ,
       index:true
+    } ,
+
+    profilePic:{
+      type:String ,
     }
    
   },

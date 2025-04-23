@@ -19,6 +19,8 @@ import handleError from '../utils/handleError.js'
 import isIDGood from '../utils/isIDGood.js'
 import {sendTextMessage} from '../helpers/sendTextMessage.js'
 import { nanoid } from 'nanoid'
+import { getForgotPasswordBody } from '../sms-templates/forgotPassword.js'
+import { getSignupBody } from '../sms-templates/signup.js'
 /**
  * Controller: signupController
  * Description: Handles user registration by creating a new user in the database.
@@ -59,12 +61,12 @@ export const signupController = async (req, res) => {
       throw buildErrorObject(httpStatus.NOT_FOUND, 'No OTP found for this phone number. Please request a new OTP.')
     }
 
-    console.log(verification)
     if (parseInt(req.otp) !== parseInt(verification.phoneOtp)) {
       throw buildErrorObject(httpStatus.UNAUTHORIZED, 'The OTP you entered is incorrect. Please try again.')
     }
     
-    // Generate a unique memberId using nanoid
+    await Verifications.deleteOne({ phoneNumber: req.phoneNumber })
+
     let unique = false
     let memberId
     while (!unique) {
@@ -337,7 +339,10 @@ export const sendOtpController = async (req, res) => {
     const validTill = new Date(new Date().getTime() + 30 * 60000)
 
 
-    await sendTextMessage( requestData.phoneNumber , otp)
+    const messageBody = getSignupBody(otp)
+
+
+    await sendTextMessage( requestData.phoneNumber , otp , messageBody)
 
     console.log(otp , requestData.phoneNumber)
 
@@ -521,6 +526,51 @@ export const generateForgotPasswordTokenController = async(req , res)=>{
 
 
 
+
+
+export const getForgotPasswordOtpController = async (req, res) => {
+  try {
+    const requestData = matchedData(req)
+
+    const user = await Buyer.findOne({
+      phoneNumber: requestData.phoneNumber,
+    }).lean()
+    if (!user) {
+      throw buildErrorObject(httpStatus.BAD_REQUEST,'No Such User Exists')
+    }
+
+
+    const otp = otpGenerator.generate(6, {
+      lowerCaseAlphabets: false,
+      upperCaseAlphabets: false,
+      specialChars: false,
+      digits: true,
+    })
+
+    // const validTill = new Date(new Date().getTime() + 30 * 60000)
+
+    const messageBody = getForgotPasswordBody(otp)
+
+
+    await sendTextMessage( requestData.phoneNumber , otp , messageBody)
+
+    console.log(otp , requestData.phoneNumber)
+
+    await Verifications.findOneAndUpdate(
+      { phoneNumber: requestData.phoneNumber },
+      { phoneOtp:otp },
+      { upsert: true }
+    )
+
+    res
+      .status(httpStatus.OK)
+      .json(buildResponse(httpStatus.OK, { message: 'OTP_SENT' }))
+  } catch (err) {
+    handleError(res, err)
+  }
+}
+
+
 export const resetPasswordController = async(req , res)=>{
   try{
     req = matchedData(req)
@@ -560,3 +610,46 @@ export const resetPasswordController = async(req , res)=>{
     handleError(res ,err)
   }
 }
+
+
+
+
+
+
+
+export const getForgotPasswordToken = async( req , res)=>{
+  try{
+    const validatedData = matchedData(req)
+    console.log(validatedData)
+    const verification = await Verifications.findOne({ phoneNumber: validatedData.phoneNumber }).lean()
+    if (!verification) {
+      throw buildErrorObject(httpStatus.NOT_FOUND, 'No OTP found for this phone number. Please request a new OTP.')
+    }
+    if (parseInt(validatedData.otp) !== parseInt(verification.phoneOtp)) {
+      throw buildErrorObject(httpStatus.UNAUTHORIZED, 'The OTP you entered is incorrect. Please try again.')
+    }
+    const user = await Buyer.findOne({ phoneNumber: validatedData.phoneNumber }).lean()
+    if (!user) {
+      throw buildErrorObject(httpStatus.NOT_FOUND, 'No user found with this phone number.')
+    }
+    const forgotToken = generateForgotToken(user)
+    await Verifications.deleteOne({ phoneNumber: validatedData.phoneNumber })
+
+    res.status(httpStatus.OK).json(
+      buildResponse(httpStatus.OK, {
+        forgotToken,
+      }
+      )
+    )
+  }catch(err){
+    handleError(res , err)
+  }
+}
+
+
+
+
+
+
+
+

@@ -6,45 +6,41 @@ import * as authValidators from '../validators/auth.validator.js'
 
 const router = express.Router()
 
+router.use(trimRequest.all)
+
 
 router.post(
   '/signup',
-  trimRequest.all,
   authValidators.signupValidator,
   authControllers.signupController,
 )
 
 router.post(
   '/login' ,
-  trimRequest.all , 
   authValidators.loginValidator ,
   authControllers.loginController
 )
 
 router.delete(
   '/logout' , 
-  trimRequest.all ,
   authControllers.logoutController
 )
 
 
 router.post(
   '/send-otp' ,
-  trimRequest.all,
   authValidators.sendOtpvalidator ,
   authControllers.sendOtpController
 )
 
-router.post(
-  '/forgot-password-token',
-  trimRequest.all,
-  authValidators.generateForgotPasswordTokenValidator,
-  authControllers.generateForgotPasswordTokenController
-)
+// router.post(
+//   '/forgot-password-token',
+//   authValidators.generateForgotPasswordTokenValidator,
+//   authControllers.generateForgotPasswordTokenController
+// )
 
 router.post(
   '/reset-password' ,
-  trimRequest.all ,
   authValidators.resetPasswordValidator ,
   authControllers.resetPasswordController
 )
@@ -52,15 +48,33 @@ router.post(
 
 router.post(
   '/verify-otp' ,
-  trimRequest.all , 
   authValidators.verifyOtpValidator , 
   authControllers.verifyOtpController
 )
 
 
+
+router.post(
+  '/forgot-password-otp' ,
+  authValidators.validateGetPasswordOTP ,
+  authControllers.getForgotPasswordOtpController
+)
+
+router.post(
+  '/forgot-password-token' ,
+  authValidators.validateGetForgotPasswordToken ,
+  authControllers.getForgotPasswordToken
+)
+
+router.post(
+  '/reset-password' ,
+  authValidators.resetPasswordValidator,
+  authControllers.resetPasswordController
+)
+
+
 router.get(
   '/verify-tokens' ,
-  trimRequest.all ,
   authValidators.verifyTokensValidator ,
   authControllers.verifyTokensController
 )

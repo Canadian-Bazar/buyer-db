@@ -12,11 +12,8 @@ export const validateGetAllCategories = [
 
 export const validateGetSubCategories = [
     ...paginationValidator,
-    param('parentCategoryId')
-    .exists()
-    .withMessage('Parent Category ID is required')
-    .notEmpty()
-    .withMessage('Parent Category ID cannot be empty')
+    query('parentCategoryId')
+    .optional()
     .isMongoId()
     .withMessage('Invalid Parent Category ID'),
 

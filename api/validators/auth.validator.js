@@ -168,3 +168,51 @@ export const resetPasswordValidator = [
 export const verifyTokensValidator =[
   (req , res , next)=>validateRequest(req , res , next)
 ]
+
+
+
+export const validateGetForgotPasswordToken =[
+  check('otp')
+    .exists()
+    .withMessage('OTP is required')
+    .bail()
+    .not()
+    .isEmpty()
+    .withMessage('OTP cannot be empty')
+    .isLength({ min: 4, max: 6 })
+    .withMessage('Invalid OTP')
+    .isNumeric()
+    .withMessage('Invalid OTP'),
+
+
+  check('phoneNumber')
+   .exists()
+    .withMessage('Phone Number is required')
+    .bail()
+    .not()
+    .isEmpty()
+    .withMessage('Phone Number cannot be empty')
+    // .isMobilePhone('')
+    // .withMessage('Invalid Phone Number')
+    .bail() ,
+
+    (req , res , next)=>validateRequest(req , res , next)
+]
+
+
+
+export const validateGetPasswordOTP =[
+  check('phoneNumber')
+    .exists()
+    .withMessage('Phone Number is required')
+    .bail()
+    .not()
+    .isEmpty()
+    .withMessage('Phone Number cannot be empty')
+    // .isMobilePhone('')
+    // .withMessage('Invalid Phone Number')
+    .bail() ,
+
+  (req , res , next)=>validateRequest(req , res , next)
+]
+

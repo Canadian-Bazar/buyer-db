@@ -2,21 +2,25 @@ import mongoose from 'mongoose'
 
 
 const QuotationSchema = new mongoose.Schema({
-    productId:{
-        type:mongoose.Types.ObjectId ,
-        ref:'Product' ,
-        required:true
+    slug:{
+        type:String ,
+        required:true ,
+        index:true ,
+        trim:true ,
+        lowercase:true
     } ,
     buyer:{
         type:mongoose.Types.ObjectId ,
         ref:'Buyer' ,
-        required:true
+        required:true  ,
+        index:true
 
     } ,
     seller:{
         type:mongoose.Types.ObjectId ,
         ref:'Seller' ,
-        required:true
+        required:true,
+        index:true ,
 
     } ,
     quantity:{
@@ -31,9 +35,9 @@ const QuotationSchema = new mongoose.Schema({
     description:{
         type:String ,
     } ,
-    otherAttributes:[
+    attributes:[
         {
-            name:String ,
+            field:String ,
             value:String 
         }
     ] ,
@@ -41,6 +45,24 @@ const QuotationSchema = new mongoose.Schema({
         type:String ,
         default:'sent' ,
         enum:['sent' , 'in-progess' , 'accepted' ,'rejected'] ,
+        required:true
+    } ,
+
+    minPrice:{
+        type:Number ,
+        required:true
+    } ,
+    maxPrice:{
+        type:Number ,
+        required:true
+    } ,
+
+    location:{
+        type:String ,
+        required:true
+    } ,
+    pinCode:{
+        type:String ,
         required:true
     }
 
