@@ -533,30 +533,30 @@ export const getProductInfoController = async(req, res) => {
       throw buildErrorObject(httpStatus.BAD_REQUEST, 'Invalid Product');
     }
 
-    // if (userId) {
-    //   const productId = productInfo[0]._id.toString();
-    //   const likeKey = REDIS_KEYS.LIKE_BATCH + productId + ':' + userId.toString();
+    if (userId) {
+      const productId = productInfo[0]._id.toString();
+      const likeKey = REDIS_KEYS.LIKE_BATCH + productId + ':' + userId.toString();
       
-    //   try {
-    //     const likeData = await redisClient.hgetall(likeKey);
+      try {
+        const likeData = await redisClient.hgetall(likeKey);
         
-    //     if (likeData && likeData.type) {
-    //       if (likeData.type === 'like') {
-    //         productInfo[0].isLiked = true;
-    //       } 
-    //       else if (likeData.type === 'dislike') {
-    //         productInfo[0].isLiked = false;
-    //       }
-    //     }
-    //   } catch (redisErr) {
-    //     console.error('Error checking Redis for like status', { 
-    //       productId, 
-    //       userId, 
-    //       error: redisErr.message 
-    //     });
-    //     // Continue with the database result if Redis fails
-    //   }
-    // }
+        if (likeData && likeData.type) {
+          if (likeData.type === 'like') {
+            productInfo[0].isLiked = true;
+          } 
+          else if (likeData.type === 'dislike') {
+            productInfo[0].isLiked = false;
+          }
+        }
+      } catch (redisErr) {
+        console.error('Error checking Redis for like status', { 
+          productId, 
+          userId, 
+          error: redisErr.message 
+        });
+        // Continue with the database result if Redis fails
+      }
+    }
     
     delete productInfo[0].statsCheck;
     
