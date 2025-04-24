@@ -216,3 +216,38 @@ export const validateGetPasswordOTP =[
   (req , res , next)=>validateRequest(req , res , next)
 ]
 
+
+
+
+export const validateSendEmailVerificationOTP=[
+  check('email')
+    .exists()
+    .withMessage('Email is required')
+    .bail()
+    .not()
+    .isEmpty()
+    .withMessage('Email cannot be empty')
+    .isEmail()
+    .withMessage('Invalid Email'),
+
+  (req , res , next)=>validateRequest(req , res , next)
+]
+
+
+
+export const validateVerifyEmail=[
+  check('token')
+    .exists()
+    .withMessage('Token is required')
+    .bail()
+    .not()
+    .isEmpty()
+    .withMessage('Token cannot be empty') ,
+
+
+    (req , res , next)=>validateRequest(req , res , next)
+
+
+]
+    
+

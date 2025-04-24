@@ -21,6 +21,7 @@ import {sendTextMessage} from '../helpers/sendTextMessage.js'
 import { nanoid } from 'nanoid'
 import { getForgotPasswordBody } from '../sms-templates/forgotPassword.js'
 import { getSignupBody } from '../sms-templates/signup.js'
+import generateVerificationToken from '../utils/generateVerificationToken.js'
 /**
  * Controller: signupController
  * Description: Handles user registration by creating a new user in the database.
@@ -640,6 +641,85 @@ export const getForgotPasswordToken = async( req , res)=>{
         forgotToken,
       }
       )
+    )
+  }catch(err){
+    handleError(res , err)
+  }
+}
+
+
+
+export const sendEmailVerificationLink = async(req , res)=>{
+  try{
+    const validatedData = matchedData(req)
+    let user = await Buyer.findOne({ email: validatedData.email }).lean() 
+    if(user){
+      throw buildErrorObject(httpStatus.CONFLICT, 'This email is already in usee')
+    }
+    const payload = {
+      _id:req.user._id ,
+      email:validatedData.email
+    }
+    const verificationToken = generateVerificationToken(payload)
+
+
+     sendMail(validatedData.email, 'email-verification.ejs', {
+      token:verificationToken,
+      subject: 'Email Verification',
+      frontendURL: process.env.FRONTEND_URL,
+    })
+    res.status(httpStatus.OK).json(
+      buildResponse(httpStatus.OK, {
+        message: 'Verification email sent successfully',
+      })
+    )
+
+    
+  }catch(err){
+    handleError(res , err)
+  }
+}
+
+
+export const verifyEmail = async(req , res)=>{
+  try{
+    const validatedData = matchedData(req)
+    const decryptedToken = decrypt(validatedData.token)
+
+    let user 
+    
+
+    try{
+      user =  jwt.verify(decryptedToken , process.env.VERIFICATION_SECRET)
+
+      console.log(user)
+    }catch(err){
+      return res.status(httpStatus.UNAUTHORIZED).json(
+        buildResponse(httpStatus.UNAUTHORIZED, {
+          success:false ,
+          message:'Token Expired'
+        })
+      )
+    }
+
+    const userId = await isIDGood(user._id)
+
+    console.log(userId)
+    const userData = await Buyer.findById(userId)
+
+    if(!userData){
+      throw buildErrorObject(httpStatus.NOT_FOUND , 'No Such User Found')
+    }
+    
+
+    userData.email = user.email
+
+    await userData.save()
+    res.status(httpStatus.ACCEPTED).json(
+      httpStatus.ACCEPTED , {
+        success:true ,
+        message:'Email Verified Successfully'
+      }
     )
   }catch(err){
     handleError(res , err)

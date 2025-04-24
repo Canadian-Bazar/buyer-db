@@ -3,7 +3,7 @@ import trimRequest from 'trim-request'
 
 import * as authControllers from '../controllers/auth.controller.js'
 import * as authValidators from '../validators/auth.validator.js'
-
+import { requireAuth } from '../middlewares/auth.middleware.js'
 const router = express.Router()
 
 router.use(trimRequest.all)
@@ -77,6 +77,21 @@ router.get(
   '/verify-tokens' ,
   authValidators.verifyTokensValidator ,
   authControllers.verifyTokensController
+)
+
+
+router.post(
+  '/email-verification-link' ,
+  requireAuth ,
+  authValidators.validateSendEmailVerificationOTP ,
+  authControllers.sendEmailVerificationLink
+)
+
+
+router.post(
+  '/verify-email' ,
+  authValidators.validateVerifyEmail ,
+  authControllers.verifyEmail
 )
 
 
