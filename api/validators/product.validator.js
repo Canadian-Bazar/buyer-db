@@ -47,10 +47,10 @@ export const validateGetProducts=[
     .withMessage('Business Type should be a valid id') ,
 
 
-    query('location') 
+    query('state') 
     .optional()
     .isString()
-    .withMessage('Location should be a string') ,
+    .withMessage('state should be a string') ,
 
 
     query('deliveryDays')

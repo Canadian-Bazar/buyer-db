@@ -74,12 +74,12 @@ export const validateCreateQuotation = [
         .isString()
         .withMessage('Description must be a string'),
 
-    check('location')
+    check('state')
         .exists()
-        .withMessage('Location is required')
+        .withMessage('State is required')
         .not()
         .isEmpty()
-        .withMessage('Location cannot be empty') ,
+        .withMessage('State cannot be empty') ,
     check('pinCode')
         .exists()
         .withMessage('Pin Code is required')

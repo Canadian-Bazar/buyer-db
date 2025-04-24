@@ -8,6 +8,8 @@ import likeRoutes from './like.routes.js'
 import businessTypeRoutes from './business-types.routes.js'
 import quotationRoutes from './quotation.routes.js'
 import profileRoutes from './profile.routes.js'
+import notificationsRoutes from './notifications.routes.js'
+import addressRoutes from './buyer-address.routes.js'
 
 
 const v1Routes = express.Router()
@@ -22,6 +24,8 @@ v1Routes.use('/like' , likeRoutes)
 v1Routes.use('/business-types' , businessTypeRoutes)
 v1Routes.use('/quotation' , quotationRoutes)
 v1Routes.use('/profile' , profileRoutes)
+v1Routes.use('/notifications' , notificationsRoutes)
+v1Routes.use('/address' , addressRoutes)
 
 router.use('/api/v1', v1Routes)
 

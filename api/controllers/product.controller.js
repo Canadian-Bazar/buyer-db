@@ -88,8 +88,8 @@ export const getProductsController = async (req, res) => {
       sellerMatch['sellerData.businessType'] = new mongoose.Types.ObjectId(validatedData.businessType);
     }
     
-    if (validatedData?.location) {
-      sellerMatch['sellerData.state'] = validatedData.location;
+    if (validatedData?.state) {
+      sellerMatch['sellerData.state'] = validatedData.state;
     }
     
     if (Object.keys(sellerMatch).length > 0) {
@@ -226,7 +226,8 @@ export const getProductsController = async (req, res) => {
         seller: {
           _id: '$sellerData._id',
           companyName: '$sellerData.companyName',
-          location: '$sellerData.state'
+          state: '$sellerData.state' ,
+          city:'$sellerData.city'
         }
       }
     });
@@ -337,7 +338,7 @@ export const getProductInfoController = async(req, res) => {
                   _id: '$sellerData._id',
                   companyName: '$sellerData.companyName',
                   profileImage: '$sellerData.profileImage',
-                  location: '$sellerData.state'
+                  state: '$sellerData.state'
                 }
               }
             }
