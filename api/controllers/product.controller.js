@@ -10,6 +10,8 @@ import buildResponse from '../utils/buildResponse.js';
 import buildErrorObject from '../utils/buildErrorObject.js';
 import path from 'path';
 import { REDIS_KEYS, redisClient } from '../redis/redis.config.js';
+import { buildProductFilters, handleRedisLikeStatus } from '../helpers/buildProductFilter.js';
+
 
 
 
@@ -23,188 +25,42 @@ export const getProductsController = async (req, res) => {
     let limit = validatedData?.limit ? Math.min(parseInt(validatedData.limit), 50) : 10;
     const skip = (page - 1) * limit;
     
-    const pipeline = [];
-    
-    pipeline.push({
-      $lookup: {
-        from: 'ProductPricing',
-        localField: '_id',
-        foreignField: 'productId',
-        as: 'pricingData'
-      }
-    });
-    
-    pipeline.push({
-      $unwind: {
-        path: '$pricingData',
-        preserveNullAndEmptyArrays: true
-      }
-    });
-    
-    const initialMatch = {};
-    
-    if (validatedData?.search) {
-      const searchRegex = new RegExp(validatedData.search, 'i');
-      initialMatch.$or = [
-        { name: searchRegex },
-        { about: { $elemMatch: { $regex: searchRegex } } }
-      ];
-    }
-    
-    if (validatedData?.isVerified !== undefined) {
-      initialMatch.isVerified = validatedData.isVerified === 'true';
-    }
-    
-    if (validatedData?.minQuantity) {
-      const requestedQuantity = parseInt(validatedData.minQuantity);
-      initialMatch['pricingData.quantityPriceTiers.0.min'] = { $lte: requestedQuantity };
-    }
-    
-    if (validatedData?.deliveryDays) {
-      const maxDeliveryDays = parseInt(validatedData.deliveryDays);
-      initialMatch.deliveryDays = { $lte: maxDeliveryDays };
-    }
-    
-    if (Object.keys(initialMatch).length > 0) {
-      pipeline.push({ $match: initialMatch });
-    }
-    
-    pipeline.push({
-      $lookup: {
-        from: 'Sellers',
-        localField: 'seller',
-        foreignField: '_id',
-        as: 'sellerData'
-      }
-    });
-    
-    pipeline.push({ $unwind: '$sellerData' });
-    
-    const sellerMatch = {};
-    
-    sellerMatch['sellerData.approvalStatus'] = 'approved';
-    
-    if (validatedData?.businessType) {
-      sellerMatch['sellerData.businessType'] = new mongoose.Types.ObjectId(validatedData.businessType);
-    }
-    
-    if (validatedData?.state) {
-      sellerMatch['sellerData.state'] = validatedData.state;
-    }
-    
-    if (Object.keys(sellerMatch).length > 0) {
-      pipeline.push({ $match: sellerMatch });
-    }
-    
-    if (validatedData?.subcategories && Array.isArray(validatedData.subcategories) && validatedData.subcategories.length > 0) {
-      const subcategoryIds = validatedData.subcategories.map(id => new mongoose.Types.ObjectId(id));
-      pipeline.push({ 
-        $match: { categoryId: { $in: subcategoryIds } }
-      });
-    }
-    
-    pipeline.push({
-      $addFields: {
-        firstTier: { $arrayElemAt: ['$pricingData.quantityPriceTiers', 0] },
-        lastTier: { 
-          $arrayElemAt: [
-            '$pricingData.quantityPriceTiers', 
-            { $subtract: [{ $size: '$pricingData.quantityPriceTiers' }, 1] }
-          ] 
-        },
-        tiersCount: { $size: '$pricingData.quantityPriceTiers' },
-        moq: { 
-          $ifNull: [
-            { $arrayElemAt: ['$pricingData.quantityPriceTiers.min', 0] },
-            1
-          ] 
-        },
-        deliveryInfo: {
-          days: '$deliveryDays',
-          min: '$pricingData.leadTime.min',
-          max: '$pricingData.leadTime.max',
-          unit: '$pricingData.leadTime.unit'
-        }
-      }
-    });
-    
-    pipeline.push({
-      $addFields: {
-        calculatedMinPrice: '$lastTier.price',
-        calculatedMaxPrice: '$firstTier.price',
-        hasUnlimitedTier: { $eq: ['$lastTier.max', null] }
-      }
-    });
-    
-    if (validatedData?.minPrice) {
-      const minPriceValue = parseFloat(validatedData.minPrice);
-      pipeline.push({
-        $match: {
-          'lastTier.price': { $gte: minPriceValue }
-        }
-      });
-    }
-    
-    if (validatedData?.maxPrice) {
-      const maxPriceValue = parseFloat(validatedData.maxPrice);
-      pipeline.push({
-        $match: {
-          'firstTier.price': { $lte: maxPriceValue }
-        }
-      });
-    }
-    
-    if (userId) {
-      pipeline.push({
+    // Start with base pipeline for products
+    const pipeline = [
+      {
         $lookup: {
-          from: 'Liked',
-          let: { productId: '$_id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$productId', '$$productId'] },
-                    { $eq: ['$buyerId', new mongoose.Types.ObjectId(userId)] }
-                  ]
-                }
-              }
-            }
-          ],
-          as: 'likedData'
+          from: 'ProductPricing',
+          localField: '_id',
+          foreignField: 'productId',
+          as: 'pricingData'
         }
-      });
-      
-      pipeline.push({
-        $addFields: {
-          isLiked: { $cond: [{ $gt: [{ $size: '$likedData' }, 0] }, true, false] },
-          productIdString: { $toString: '$_id' }
+      },
+      {
+        $unwind: {
+          path: '$pricingData',
+          preserveNullAndEmptyArrays: true
         }
-      });
-    } else {
-      pipeline.push({
-        $addFields: {
-          isLiked: false
+      },
+      {
+        $lookup: {
+          from: 'Sellers',
+          localField: 'seller',
+          foreignField: '_id',
+          as: 'sellerData'
         }
-      });
-    }
+      },
+      { $unwind: '$sellerData' }
+    ];
     
-    const countPipeline = [...pipeline];
-    countPipeline.push({ $count: 'totalProducts' });
+    // Apply filters using our utility
+    const filterStages = buildProductFilters(validatedData, false, userId);
+    pipeline.push(...filterStages);
     
-    let sortStage = {};
-    
-    if (validatedData?.ratings) {
-      const ratingsOrder = validatedData.ratings === 'asc' ? 1 : -1;
-      sortStage = { $sort: { avgRating: ratingsOrder } };
-    } else {
-      sortStage = { $sort: { avgRating: -1, ratingsCount: -1 } };
-    }
-    
-    pipeline.push(sortStage);
+    // Apply pagination
     pipeline.push({ $skip: skip });
     pipeline.push({ $limit: limit });
     
+    // Project fields for the response
     pipeline.push({
       $project: {
         _id: 1,
@@ -226,59 +82,30 @@ export const getProductsController = async (req, res) => {
         seller: {
           _id: '$sellerData._id',
           companyName: '$sellerData.companyName',
-          state: '$sellerData.state' ,
-          city:'$sellerData.city'
+          location: '$sellerData.state'
         }
       }
     });
     
+    // Create a separate pipeline for counting with filters applied
+    const countPipeline = [...pipeline.filter(stage => !stage.$skip && !stage.$limit && !stage.$project)];
+    countPipeline.push({ $count: 'totalProducts' });
+    
+    // Execute both pipelines
     const [countResult, products] = await Promise.all([
       Product.aggregate(countPipeline),
       Product.aggregate(pipeline)
     ]);
     
+    // Process likes from Redis
+    const processedProducts = await handleRedisLikeStatus(products, userId, redisClient, REDIS_KEYS);
+    
+    // Calculate pagination info
     const totalProducts = countResult.length > 0 ? countResult[0].totalProducts : 0;
     const totalPages = Math.ceil(totalProducts / limit);
     
-    if (userId && products.length > 0) {
-      const productIds = products.map(product => product.productIdString);
-      const redisKeys = productIds.map(pid => REDIS_KEYS.LIKE_BATCH + pid + ':' + userId.toString());
-      
-      try {
-        const pipeline = redisClient.pipeline();
-        redisKeys.forEach(key => {
-          pipeline.hgetall(key);
-        });
-        
-        const redisResults = await pipeline.exec();
-        
-        for (let i = 0; i < products.length; i++) {
-          const likeData = redisResults[i][1]; // [err, result] format
-          
-          if (likeData && likeData.type) {
-            if (likeData.type === 'like') {
-              products[i].isLiked = true;
-            } else if (likeData.type === 'dislike') {
-              products[i].isLiked = false;
-            }
-          }
-          
-          delete products[i].productIdString;
-        }
-      } catch (redisErr) {
-        console.error('Error checking Redis for like statuses', { 
-          userId, 
-          error: redisErr.message 
-        });
-        
-        products.forEach(product => {
-          delete product.productIdString;
-        });
-      }
-    }
-    
     return res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, {
-      products,
+      products: processedProducts,
       totalProducts,
       totalPages,
       currentPage: page
@@ -288,7 +115,6 @@ export const getProductsController = async (req, res) => {
     handleError(res, err);
   }
 };
-
 export const getProductInfoController = async(req, res) => {
   try {
     const validatedData = matchedData(req);

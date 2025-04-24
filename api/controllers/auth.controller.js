@@ -612,12 +612,6 @@ export const resetPasswordController = async(req , res)=>{
   }
 }
 
-
-
-
-
-
-
 export const getForgotPasswordToken = async( req , res)=>{
   try{
     const validatedData = matchedData(req)
@@ -646,8 +640,6 @@ export const getForgotPasswordToken = async( req , res)=>{
     handleError(res , err)
   }
 }
-
-
 
 export const sendEmailVerificationLink = async(req , res)=>{
   try{
@@ -725,6 +717,7 @@ export const verifyEmail = async(req , res)=>{
     handleError(res , err)
   }
 }
+
 
 
 
