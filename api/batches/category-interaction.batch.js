@@ -22,7 +22,6 @@ export async function processUserInteractions() {
       const bulkOps = [];
 
       const allKeys = await redisClient.keys('*');
-console.log(allKeys);
 
       console.log(interactionKeys)
   

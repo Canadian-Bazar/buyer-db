@@ -224,23 +224,21 @@ export const getProductInfoController = async(req, res) => {
             }
           ],
           
-          attributesData: [
-            {
-              $lookup: {
-                from: 'ProductAttributes',
-                localField: '_id',
-                foreignField: 'productId',
-                as: 'attributes'
-              }
-            },
-            { $unwind: { path: '$attributes', preserveNullAndEmptyArrays: true } },
-            {
-              $project: {
-                name: '$attributes.name',
-                attributes: '$attributes.attributes'
-              }
-            }
-          ],
+      attributesData: [
+  {
+    $lookup: {
+      from: 'ProductAttributes',
+      localField: '_id',
+      foreignField: 'productId',
+      as: 'attributesData'
+    }
+  },
+  {
+    $project: {
+      attributesArray: '$attributesData'
+    }
+  }
+] ,
           
           likedData: [
             {
@@ -320,10 +318,7 @@ export const getProductInfoController = async(req, res) => {
             bestsellerScore: { $arrayElemAt: ['$statsData.bestsellerScore', 0] }
           },
           
-          productAttributes: {
-            name: { $arrayElemAt: ['$attributesData.name', 0] },
-            attributes: { $arrayElemAt: ['$attributesData.attributes', 0] }
-          },
+productAttributes: { $first: '$attributesData.attributesArray' },
           
           isLiked: { $ifNull: [{ $arrayElemAt: ['$likedData.isLiked', 0] }, false] }
         }
