@@ -22,7 +22,7 @@ router.get(
 router.get(
     '/user-frequent' ,
     trimRequest.all ,
-    requireAuth ,
+    optionalAuth ,
     categoryValidator.getUserFrequentCategoriesValidator ,
     categoryController.getUserFrequentCategories
 )

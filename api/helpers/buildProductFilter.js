@@ -94,12 +94,10 @@ export const buildProductFilters = (filterParams, isProductStatsQuery = false, u
     sellerMatch[field] = filterParams.city;
   }
   
-  // Apply seller match if there are conditions
   if (Object.keys(sellerMatch).length > 0) {
     stages.push({ $match: sellerMatch });
   }
   
-  // Category/subcategory filter
   if (filterParams?.subcategories && Array.isArray(filterParams.subcategories) && filterParams.subcategories.length > 0) {
     const subcategoryIds = filterParams.subcategories.map(id => new mongoose.Types.ObjectId(id));
     stages.push({ 
@@ -107,9 +105,7 @@ export const buildProductFilters = (filterParams, isProductStatsQuery = false, u
     });
   }
   
-  // Price calculation stages for filtering by price
   if (isProductStatsQuery) {
-    // For ProductStats queries, add pricing tiers calculation
     stages.push({
       $lookup: {
         from: 'ProductPricing', 

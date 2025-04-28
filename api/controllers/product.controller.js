@@ -11,6 +11,7 @@ import buildErrorObject from '../utils/buildErrorObject.js';
 import path from 'path';
 import { REDIS_KEYS, redisClient } from '../redis/redis.config.js';
 import { buildProductFilters, handleRedisLikeStatus } from '../helpers/buildProductFilter.js';
+import { hasSubscribers } from 'diagnostics_channel';
 
 
 
@@ -25,7 +26,6 @@ export const getProductsController = async (req, res) => {
     let limit = validatedData?.limit ? Math.min(parseInt(validatedData.limit), 50) : 10;
     const skip = (page - 1) * limit;
     
-    // Start with base pipeline for products
     const pipeline = [
       {
         $lookup: {
@@ -52,15 +52,12 @@ export const getProductsController = async (req, res) => {
       { $unwind: '$sellerData' }
     ];
     
-    // Apply filters using our utility
     const filterStages = buildProductFilters(validatedData, false, userId);
     pipeline.push(...filterStages);
     
-    // Apply pagination
     pipeline.push({ $skip: skip });
     pipeline.push({ $limit: limit });
     
-    // Project fields for the response
     pipeline.push({
       $project: {
         _id: 1,
@@ -87,20 +84,16 @@ export const getProductsController = async (req, res) => {
       }
     });
     
-    // Create a separate pipeline for counting with filters applied
     const countPipeline = [...pipeline.filter(stage => !stage.$skip && !stage.$limit && !stage.$project)];
     countPipeline.push({ $count: 'totalProducts' });
     
-    // Execute both pipelines
     const [countResult, products] = await Promise.all([
       Product.aggregate(countPipeline),
       Product.aggregate(pipeline)
     ]);
     
-    // Process likes from Redis
     const processedProducts = await handleRedisLikeStatus(products, userId, redisClient, REDIS_KEYS);
     
-    // Calculate pagination info
     const totalProducts = countResult.length > 0 ? countResult[0].totalProducts : 0;
     const totalPages = Math.ceil(totalProducts / limit);
     
@@ -108,6 +101,8 @@ export const getProductsController = async (req, res) => {
       products: processedProducts,
       totalProducts,
       totalPages,
+      hasNext: totalPages > page,
+      hasPrev: page > 1,
       currentPage: page
     }));
     
@@ -120,6 +115,7 @@ export const getProductInfoController = async(req, res) => {
     const validatedData = matchedData(req);
     const { slug } = validatedData;
     const userId = req.user ? req.user._id : null;
+    console.log(slug)
     
     // Exit early if no product slug is provided
     if (!slug) {
@@ -130,7 +126,7 @@ export const getProductInfoController = async(req, res) => {
       {
         $match: {
           slug: slug,
-          isActive: true
+          // isActive: true
         }
       },
       

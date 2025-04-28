@@ -1,8 +1,9 @@
 import { check , query , param } from "express-validator";
 import { likeTypes } from "../utils/likeTypes.js";
 import validateRequest from './../utils/validateRequest.js';
+import { paginationValidator } from "./pagination.validator.js";
 
-export const validateLikeRequest=[
+export const validateLikeDislikeRequest=[
     query('productId')
     .exists()
     .withMessage('Product ID is required')
@@ -26,4 +27,11 @@ export const validateLikeRequest=[
 
     (req , res , next)=>validateRequest(req , res, next)
 
+]
+
+
+export const validateGetLikedProductsRequest=[
+    ...paginationValidator ,
+
+    (req , res , next)=>validateRequest(req , res, next)
 ]
