@@ -11,7 +11,6 @@ import buildErrorObject from '../utils/buildErrorObject.js';
 import path from 'path';
 import { REDIS_KEYS, redisClient } from '../redis/redis.config.js';
 import { buildProductFilters, handleRedisLikeStatus } from '../helpers/buildProductFilter.js';
-import { hasSubscribers } from 'diagnostics_channel';
 
 
 
@@ -196,7 +195,8 @@ export const getProductInfoController = async(req, res) => {
             { $unwind: { path: '$variations', preserveNullAndEmptyArrays: true } },
             {
               $project: {
-                variations: '$variations.variations'
+                variations: '$variations.variations' ,
+                customizableOptions: '$variations.customizableOptions',
               }
             }
           ],
@@ -283,6 +283,8 @@ export const getProductInfoController = async(req, res) => {
           services: { $arrayElemAt: ['$productData.services', 0] },
           deliveryDays: { $arrayElemAt: ['$productData.deliveryDays', 0] },
           seller: { $arrayElemAt: ['$productData.seller', 0] },
+          customizableOptions: { $arrayElemAt: ['$variationsData.customizableOptions', 0] },
+
           
           pricing: {
             quantityPriceTiers: { $arrayElemAt: ['$pricingData.quantityPriceTiers', 0] },

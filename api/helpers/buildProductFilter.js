@@ -76,6 +76,17 @@ export const buildProductFilters = (filterParams, isProductStatsQuery = false, u
   // Enforce approved sellers only
   sellerMatch[isProductStatsQuery ? 'seller.approvalStatus' : 'sellerData.approvalStatus'] = 'approved';
   
+  // Add specific seller filter (by ID)
+  if (filterParams?.seller) {
+    try {
+      const sellerId = new mongoose.Types.ObjectId(filterParams.seller);
+      const sellerIdField = isProductStatsQuery ? 'seller._id' : 'sellerData._id';
+      sellerMatch[sellerIdField] = sellerId;
+    } catch (error) {
+      console.warn('Invalid seller ID provided in filter:', filterParams.seller);
+    }
+  }
+  
   // Business type filter
   if (filterParams?.businessType) {
     const field = isProductStatsQuery ? 'seller.businessType' : 'sellerData.businessType';
@@ -98,6 +109,7 @@ export const buildProductFilters = (filterParams, isProductStatsQuery = false, u
     stages.push({ $match: sellerMatch });
   }
   
+  // Rest of the function remains the same...
   if (filterParams?.subcategories && Array.isArray(filterParams.subcategories) && filterParams.subcategories.length > 0) {
     const subcategoryIds = filterParams.subcategories.map(id => new mongoose.Types.ObjectId(id));
     stages.push({ 

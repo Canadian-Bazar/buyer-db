@@ -52,6 +52,13 @@ export const validateGetProducts=[
     .isString()
     .withMessage('state should be a string') ,
 
+    query('seller')
+    .optional()
+    .notEmpty()
+    .withMessage('Seller Id should not be empty')
+    .isMongoId()
+    .withMessage('Seller Id should be a valid id') ,
+
 
     query('deliveryDays')
     .optional()
