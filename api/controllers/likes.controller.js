@@ -236,4 +236,4 @@ export const getLikedProductsController = async (req, res) => {
     } catch (err) {
       handleError(res, err);
     }
-  };
+};

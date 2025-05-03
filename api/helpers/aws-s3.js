@@ -29,6 +29,8 @@ export const verifyAWSConnection = async () => {
 export const uploadFile = async (files) => {
   try {
     const bucketName = process.env.S3_BUCKET;
+
+    console.log('bro')
     if (!bucketName) {
       console.error('S3_BUCKET_NAME is not set in environment variables');
       throw new Error('S3_BUCKET_NAME is not set');
@@ -36,6 +38,8 @@ export const uploadFile = async (files) => {
     if (!files || files.length === 0) {
       throw new Error('No files uploaded');
     }
+
+    console.log('bro1')
 
     const uploadPromises = files.map(async (file) => {
       const fileStream = fs.createReadStream(file.path);

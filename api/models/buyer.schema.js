@@ -61,7 +61,27 @@ const BuyerSchema = new mongoose.Schema(
 
     profilePic:{
       type:String ,
-    }
+    } ,
+    avatar:{
+      type:String ,
+    } ,
+    preferredLanguage:{
+      type:mongoose.Types.ObjectId ,
+      ref:'Language' ,
+    } ,
+    preferredCurrency:{
+      type:mongoose.Types.ObjectId ,
+      ref:'Currency' ,
+    } ,
+
+    paymentMethods: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'PaymentMethod',
+      },
+    ],
+
+    
    
   },
 

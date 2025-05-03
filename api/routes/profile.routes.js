@@ -33,4 +33,20 @@ router.post(
 )
 
 
+router.get(
+  '/preferences' ,
+  profileValidator.validateGetProfileOptions ,
+  profileControllers.getProfileOptions
+
+)
+
+router.put(
+  '/preferences' ,
+
+  requireAuth ,
+  profileValidator.validateUpdateProfilePreference ,
+  profileControllers.updateProfilePreferencesController
+)
+
+
 export default router
