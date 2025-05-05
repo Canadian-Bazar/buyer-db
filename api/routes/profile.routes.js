@@ -32,6 +32,14 @@ router.post(
     profileControllers.updateProfileController
 )
 
+router.get(
+  '/user-preferences' ,
+  requireAuth ,
+  profileValidator.validateGetProfilePreferences ,
+  profileControllers.getUserPreferencesController
+
+)
+
 
 router.get(
   '/preferences' ,

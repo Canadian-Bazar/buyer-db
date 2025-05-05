@@ -192,3 +192,21 @@ export const updateProfilePreferencesController = async (req, res) => {
         handleError(res, err);
     }
 };
+
+
+export const getUserPreferencesController = async(req , res)=>{
+    try{
+        const preferences = await Buyer.findById(req.user._id)
+          .select('preferredLanguage preferredCurrency paymentMethods')
+          .populate('preferredLanguage preferredCurrency paymentMethods')
+          .lean();
+
+        if (!preferences) {
+            return res.status(httpStatus.NOT_FOUND).json(buildResponse(httpStatus.NOT_FOUND, 'Buyer not found'));
+        }
+
+        res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, preferences));
+    }catch(err){
+        handleError(res , err)
+    }
+}

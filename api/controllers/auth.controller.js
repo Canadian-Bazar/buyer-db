@@ -721,6 +721,41 @@ export const verifyEmail = async(req , res)=>{
 
 
 
+export const changePasswordController = async(req , res)=>{
+  try{
+    const validatedData =matchedData(req)
+
+    const {oldPassword , newPassword , confirmPassword} = validatedData
+    if(newPassword !== confirmPassword){
+      throw buildErrorObject(httpStatus.BAD_REQUEST , 'New Password and Confirm Password do not match')
+    }
+    const user = await Buyer.findById(req.user._id).select('password').lean()
+    if(!user){
+      throw buildErrorObject(httpStatus.NOT_FOUND , 'No Such User Found')
+    }
+    const isPasswordCorrect = await bcrypt.compare(oldPassword , user.password)
+    if(!isPasswordCorrect){
+      throw buildErrorObject(httpStatus.UNAUTHORIZED , 'Old Password is Incorrect')
+    }
+    const hashedPassword = await bcrypt.hash(newPassword , 10)
+    const updatedUser = await Buyer.findByIdAndUpdate(req.user._id , {password:hashedPassword} , {new:true}).lean()
+    if(!updatedUser){
+      throw buildErrorObject(httpStatus.INTERNAL_SERVER_ERROR , 'Unable to update password')
+    }
+    res.status(httpStatus.OK).json(
+      buildResponse(httpStatus.OK , {
+        message:'Password Changed Successfully'
+      })
+    )
+
+  }catch(err){
+    handleError(res , err)
+  }
+}
+
+
+
+
 
 
 

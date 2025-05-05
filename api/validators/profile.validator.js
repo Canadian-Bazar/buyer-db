@@ -133,3 +133,9 @@ export const validateUpdateProfilePreference = [
     
     (req, res, next) => validateRequest(req, res, next)
 ];
+
+
+
+export const validateGetProfilePreferences =[
+    (req , res , next)=>validateRequest(req , res , next)
+]

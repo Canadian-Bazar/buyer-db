@@ -94,6 +94,13 @@ router.post(
   authControllers.verifyEmail
 )
 
+router.post(
+  '/change-password' ,
+  requireAuth ,
+  authValidators.validateChangePassword ,
+  authControllers.changePasswordController
+)
+
 
 
 

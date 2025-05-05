@@ -249,5 +249,42 @@ export const validateVerifyEmail=[
 
 
 ]
+
+
+export const validateChangePassword =[
+  check('oldPassword')
+    .exists()
+    .withMessage('Old Password is required')
+    .bail()
+    .not()
+    .isEmpty()
+    .withMessage('Old Password cannot be empty'),
+
+  check('newPassword')
+    .exists()
+    .withMessage('New Password is required')
+    .bail()
+    .not()
+    .isEmpty()
+    .withMessage('New Password cannot be empty')
+    .isStrongPassword()
+    .withMessage(
+      'Password must conntain one digit , one special character , one uppercase letter with minimum length 8',
+    ),
+
+    check('confirmPassword')
+    .exists()
+    .withMessage('Confirm Password is required')
+    .bail()
+    .not()
+    .isEmpty()
+    .withMessage('Confirm Password cannot be empty')
+    .isStrongPassword()
+    .withMessage(
+      'Password must conntain one digit , one special character , one uppercase letter with minimum length 8',
+    ) ,
+
+  (req, res, next) => validateRequest(req, res, next)
+]
     
 
