@@ -78,7 +78,7 @@ export const getProductsController = async (req, res) => {
         seller: {
           _id: '$sellerData._id',
           companyName: '$sellerData.companyName',
-          location: '$sellerData.state'
+          state: '$sellerData.state'
         }
       }
     });
@@ -109,6 +109,7 @@ export const getProductsController = async (req, res) => {
     handleError(res, err);
   }
 };
+
 export const getProductInfoController = async(req, res) => {
   try {
     const validatedData = matchedData(req);
@@ -141,6 +142,16 @@ export const getProductInfoController = async(req, res) => {
               }
             },
             { $unwind: { path: '$sellerData', preserveNullAndEmptyArrays: true } },
+
+            {
+              $lookup: {
+                from: 'BusinessType',
+                localField: 'sellerData.businessType',
+                foreignField: '_id',
+                as: 'businessTypeData'
+              }
+            },
+            { $unwind: { path: '$businessTypeData', preserveNullAndEmptyArrays: true } },
             
             {
               $project: {
@@ -148,6 +159,7 @@ export const getProductInfoController = async(req, res) => {
                 name: 1,
                 isCustomizable: 1,
                 slug: 1,
+                categoryId:1 ,
                 avgRating: 1,
                 ratingsCount: 1,
                 isVerified: 1,
@@ -159,7 +171,9 @@ export const getProductInfoController = async(req, res) => {
                   _id: '$sellerData._id',
                   companyName: '$sellerData.companyName',
                   profileImage: '$sellerData.profileImage',
-                  state: '$sellerData.state'
+                  state: '$sellerData.state' ,
+                  createdAt:'$sellerData.createdAt' ,
+                  businessType:'$businessTypeData.name'
                 }
               }
             }
@@ -273,6 +287,7 @@ export const getProductInfoController = async(req, res) => {
         $project: {
           _id: { $arrayElemAt: ['$productData._id', 0] },
           name: { $arrayElemAt: ['$productData.name', 0] },
+          categoryId:{$arrayElemAt: ['$productData.categoryId', 0]} ,
           isCustomizable: { $arrayElemAt: ['$productData.isCustomizable', 0] },
           slug: { $arrayElemAt: ['$productData.slug', 0] },
           avgRating: { $arrayElemAt: ['$productData.avgRating', 0] },

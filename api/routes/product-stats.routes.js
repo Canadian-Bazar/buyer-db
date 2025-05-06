@@ -42,4 +42,10 @@ router.get(
     productStatsController.getNewArrivalProducts
 )
 
+router.get(
+    '/suggested' ,
+    productStatsValidator.validateGetSuggestedProducts ,
+    productStatsController.getSuggestedProducts
+)
+
 export default router

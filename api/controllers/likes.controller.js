@@ -137,7 +137,7 @@ export const getLikedProductsController = async (req, res) => {
           seller: product.seller ? {
             _id: product.seller._id,
             companyName: product.seller.companyName,
-            location: product.seller.state,
+            state: product.seller.state,
             profileImage: product.seller.profileImage
           } : null
         };

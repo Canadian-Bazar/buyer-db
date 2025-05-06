@@ -2,6 +2,7 @@ import { matchedData } from "express-validator";
 import { query , body , param } from "express-validator";
 import { paginationValidator } from "./pagination.validator.js";
 import validateRequest from "../utils/validateRequest.js";
+import { validateGetProducts } from "./product.validator.js";
 
 
 export const validateTrackProductView = [
@@ -31,13 +32,13 @@ export const validateTrackProductView = [
 
 
   export const validateGetPopularProducts =[
-    ...paginationValidator , 
+    ...validateGetProducts ,
     (req , res , next) => validateRequest(req , res , next)
   ]
 
 
   export const validateGetBestsellerProducts =[
-    ...paginationValidator ,
+    ...validateGetProducts ,
     (req , res, next) => validateRequest(req , res  , next)
   ]
 
@@ -45,6 +46,14 @@ export const validateTrackProductView = [
   export const validateGetNewArrivals =[
     ...paginationValidator ,
     (req , res, next) => validateRequest(req , res  , next)
+  ]
+
+
+  export const validateGetSuggestedProducts=[
+
+    ...validateGetProducts ,
+
+    (req , res , next) =>validateRequest(req , res , next)
   ]
 
 
