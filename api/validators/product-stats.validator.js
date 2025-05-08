@@ -50,6 +50,12 @@ export const validateTrackProductView = [
 
 
   export const validateGetSuggestedProducts=[
+    query('categoryId')
+    .exists()
+    .withMessage('Category Is Required')
+    .notEmpty()
+    .isMongoId()
+    .withMessage('Invalid Mongo Id'),
 
     ...validateGetProducts ,
 

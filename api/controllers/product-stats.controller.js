@@ -550,6 +550,7 @@ export const getSuggestedProducts = async(req, res) => {
     const skip = (page - 1) * limit;
     
     // Get the category and its ancestors
+    console.log(categoryId)
     const category = await Category.findById(categoryId).select('ancestors');
     
     if (!category) {
