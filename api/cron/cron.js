@@ -96,19 +96,19 @@ export function scheduleAnalyticsCronJobs() {
 
   )
 
-  // setInterval(
-  //   async () =>{
-  //     try{
-  //        await likeBatch.processBatchLikes()
+  setInterval(
+    async () =>{
+      try{
+         await likeBatch.processBatchLikes()
 
 
-  //     }catch(err){
-  //       console.error('Error in processing interactions')
+      }catch(err){
+        console.error('Error in processing interactions')
 
-  //     }
-  //   } , 15*1000
+      }
+    } , 15*1000
 
-  // )
+  )
   
   console.log('Analytics cron jobs scheduled successfully');
 }
