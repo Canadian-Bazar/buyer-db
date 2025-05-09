@@ -138,7 +138,7 @@ export const buildProductFilters = (filterParams, isProductStatsQuery = false, u
             { $subtract: [{ $size: '$pricing.quantityPriceTiers' }, 1] }
           ] 
         },
-        tiersCount: { $size: '$pricing.quantityPriceTiers' },
+        // tiersCount: { $size: '$pricing.quantityPriceTiers' },
       }
     });
     
@@ -172,7 +172,7 @@ export const buildProductFilters = (filterParams, isProductStatsQuery = false, u
             { $subtract: [{ $size: '$pricingData.quantityPriceTiers' }, 1] }
           ] 
         },
-        tiersCount: { $size: '$pricingData.quantityPriceTiers' },
+        // tiersCount: { $size: '$pricingData.quantityPriceTiers' },
         moq: { 
           $ifNull: [
             { $arrayElemAt: ['$pricingData.quantityPriceTiers.min', 0] },

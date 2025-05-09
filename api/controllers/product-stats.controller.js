@@ -58,6 +58,8 @@ export const trackQuotationStatus = async (req, res) => {
  */
 export const getPopularProducts = async (req, res) => {
   try {
+
+
     const validatedData = matchedData(req)
     const page = parseInt(validatedData.page || '1');
     const limit = parseInt(validatedData.limit || '10');

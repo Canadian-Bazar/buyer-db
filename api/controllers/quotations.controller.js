@@ -4,6 +4,7 @@ import buildResponse from '../utils/buildResponse.js'
 import handleError from '../utils/handleError.js'
 import  httpStatus  from 'http-status';
 import Product from '../models/products.schema.js'
+import buildErrorObject from '../utils/buildErrorObject.js';
 
 
 
@@ -20,10 +21,10 @@ export const createQuotationController = async( req , res)=>{
         ])
 
         if(!productExists){
-            return res.status(httpStatus.NOT_FOUND).json(buildResponse(httpStatus.BAD_REQUEST , 'Product not found'))
+            throw buildErrorObject(httpStatus.BAD_REQUEST , 'Product Not Found')
         }
         if(quotationExists){
-            return res.status(httpStatus.BAD_REQUEST).json(buildResponse(httpStatus.BAD_REQUEST , 'Quotation already exists'))
+            throw buildErrorObject(httpStatus.BAD_REQUEST , 'Quotation already exists')
         }
 
         console.log(validatedData)
