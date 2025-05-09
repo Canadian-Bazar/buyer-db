@@ -126,8 +126,8 @@ export const getPopularProducts = async (req, res) => {
         ratingsCount: '$product.ratingsCount',
         isCustomizable: '$product.isCustomizable',
         isVerified: '$product.isVerified',
-        minPrice: '$calculatedMinPrice',
-        maxPrice: '$calculatedMaxPrice',
+        minPrice: '$product.minPrice',
+        maxPrice: '$product.maxPrice',
         moq: 1,
         hasUnlimitedTier: 1,
         tiersCount: 1,
@@ -220,6 +220,7 @@ export const getPopularProducts = async (req, res) => {
       
       processedProducts = [...processedProducts, ...processedRandomProducts];
     }
+    console.log(countResult)
     
     // Calculate pagination info
     const totalCount = countResult.length > 0 ? countResult[0].totalCount : 0;
@@ -243,8 +244,8 @@ export const getPopularProducts = async (req, res) => {
 
 export const getBestsellerProducts = async (req, res) => {
   try {
-    const validatedData = matchedData(req)
-    console.log(validatedData)
+    const validatedData = matchedData(req);
+    console.log(validatedData);
     const page = parseInt(validatedData.page || '1');
     const limit = parseInt(validatedData.limit || '10');
     const userId = req.user ? req.user._id : null;
@@ -255,13 +256,8 @@ export const getBestsellerProducts = async (req, res) => {
     
     const skip = (page - 1) * limit;
     
-    // Start with base pipeline for bestseller products
-    const pipeline = [
-      { $match: { acceptedQuotationCount: { $gte: 0 } } },
-      { $sort: { bestsellerScore: -1 } },
-      { $skip: skip },
-      { $limit: limit },
-      
+    // First, let's define the lookup stages that both pipelines will need
+    const lookupStages = [
       // Lookup product details
       {
         $lookup: {
@@ -293,12 +289,21 @@ export const getBestsellerProducts = async (req, res) => {
           as: 'category'
         }
       },
-      { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } }
     ];
     
     // Apply filters using our utility
     const filterStages = buildProductFilters(validatedData, true, userId);
-    pipeline.push(...filterStages);
+    
+    // Build the main pipeline
+    const pipeline = [
+      { $match: { acceptedQuotationCount: { $gte: 0 } } },
+      ...lookupStages,
+      ...filterStages,
+      { $sort: { bestsellerScore: -1 } },
+      { $skip: skip },
+      { $limit: limit }
+    ];
     
     // Project fields for the response
     const projectStage = {
@@ -311,12 +316,14 @@ export const getBestsellerProducts = async (req, res) => {
         ratingsCount: '$product.ratingsCount',
         isCustomizable: '$product.isCustomizable',
         isVerified: '$product.isVerified',
-        minPrice: '$calculatedMinPrice',
-        maxPrice: '$calculatedMaxPrice',
-        moq: 1,
-        hasUnlimitedTier: 1,
-        tiersCount: 1,
-        deliveryInfo: 1,
+        minPrice: '$product.minPrice',
+        maxPrice: '$product.maxPrice',
+        moq: '$product.minOrderQuantity',
+        hasUnlimitedTier: { $literal: false },
+        tiersCount: { $literal: 0 },
+        deliveryInfo: {
+          days: '$product.deliveryDays'
+        },
         seller: {
           _id: '$seller._id',
           companyName: '$seller.companyName',
@@ -328,26 +335,29 @@ export const getBestsellerProducts = async (req, res) => {
           name: '$category.name',
           description: '$category.description'
         },
-        isLiked: 1,
-        productIdString: 1
+        isLiked: { $ifNull: ['$isLiked', false] },
+        productIdString: { $toString: '$product._id' }
       }
     };
     pipeline.push(projectStage);
     
-    // Create a separate pipeline for counting with filters applied
+    // Create a separate pipeline for counting - must include lookups for filters to work
     const countPipeline = [
-      { $match: { acceptedQuotationCount: { $gte: 0 } } }
+      { $match: { acceptedQuotationCount: { $gte: 0 } } },
+      ...lookupStages,
+      ...filterStages.filter(stage => !stage.$skip && !stage.$limit && !stage.$project && !stage.$sort),
+      { $count: 'totalCount' }
     ];
     
-    // Add filter stages to count pipeline (excluding pagination and projection)
-    countPipeline.push(...filterStages.filter(stage => !stage.$skip && !stage.$limit && !stage.$project));
-    countPipeline.push({ $count: 'totalCount' });
+    console.log('Count pipeline:', JSON.stringify(countPipeline, null, 2));
     
     // Execute both pipelines
     const [products, countResult] = await Promise.all([
       ProductStats.aggregate(pipeline),
       ProductStats.aggregate(countPipeline)
     ]);
+    
+    console.log('Count result:', countResult);
     
     // Process likes from Redis
     let processedProducts = await handleRedisLikeStatus(products, userId, redisClient, REDIS_KEYS);
@@ -365,6 +375,41 @@ export const getBestsellerProducts = async (req, res) => {
       // Get product IDs to exclude
       const productIds = processedProducts.map(p => p._id);
       
+      // Define a separate projection for random products
+      const randomProjectStage = {
+        $project: {
+          _id: '$product._id',
+          name: '$product.name',
+          slug: '$product.slug',
+          images: '$product.images',
+          avgRating: '$product.avgRating',
+          ratingsCount: '$product.ratingsCount',
+          isCustomizable: '$product.isCustomizable',
+          isVerified: '$product.isVerified',
+          minPrice: '$product.minPrice',
+          maxPrice: '$product.maxPrice',
+          moq: '$product.minOrderQuantity',
+          hasUnlimitedTier: { $literal: false },
+          tiersCount: { $literal: 0 },
+          deliveryInfo: {
+            days: '$product.deliveryDays'
+          },
+          seller: {
+            _id: '$seller._id',
+            companyName: '$seller.companyName',
+            city: '$seller.city',
+            state: '$seller.state'
+          },
+          category: {
+            _id: '$category._id',
+            name: '$category.name',
+            description: '$category.description'
+          },
+          isLiked: { $literal: false },
+          productIdString: { $toString: '$product._id' }
+        }
+      };
+      
       // Build pipeline for random products excluding already fetched ones
       const randomPipeline = [
         {
@@ -372,37 +417,9 @@ export const getBestsellerProducts = async (req, res) => {
             _id: { $nin: productIds }
           }
         },
-        {
-          $lookup: {
-            from: 'Product',
-            localField: 'productId',
-            foreignField: '_id',
-            as: 'product'
-          }
-        },
-        { $unwind: '$product' },
-        
-        {
-          $lookup: {
-            from: 'Sellers',
-            localField: 'product.seller',
-            foreignField: '_id',
-            as: 'seller'
-          }
-        },
-        { $unwind: '$seller' },
-        
-        {
-          $lookup: {
-            from: 'Category',
-            localField: 'product.categoryId',
-            foreignField: '_id',
-            as: 'category'
-          }
-        },
-        { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
-        { $sample: { size: 15 - processedProducts.length } }, // Get random products to fill
-        projectStage // Use same projection
+        ...lookupStages,
+        { $sample: { size: 15 - processedProducts.length } }, // Get random products
+        randomProjectStage
       ];
       
       const randomProducts = await ProductStats.aggregate(randomPipeline);
@@ -410,6 +427,8 @@ export const getBestsellerProducts = async (req, res) => {
       
       processedProducts = [...processedProducts, ...processedRandomProducts];
     }
+
+    console.log(countResult);
     
     // Calculate pagination info
     const totalCount = countResult.length > 0 ? countResult[0].totalCount : 0;
