@@ -20,8 +20,8 @@ import buildErrorObject from './api/utils/buildErrorObject.js'
 import init from './config/mongo.js'
 import sessionManager from './config/sessionManager.js'
 import imageProxyRoutes from './api/routes/image-proxy.routes.js'
-// import { redisClient } from './api/redis/redis.config.js'
-// import { scheduleAnalyticsCronJobs } from './api/cron/cron.js'
+import { redisClient } from './api/redis/redis.config.js'
+import { scheduleAnalyticsCronJobs } from './api/cron/cron.js'
 import { verifyAWSConnection } from './api/helpers/aws-s3.js'
 
 
@@ -114,11 +114,11 @@ init().then((dbStatus) => {
 })
 
 
-// redisClient.ping()
-//                  .then(()=>{
-//                   scheduleAnalyticsCronJobs()
+redisClient.ping()
+                 .then(()=>{
+                  scheduleAnalyticsCronJobs()
 
-//                  })
+                 })
 
 
 // For testing

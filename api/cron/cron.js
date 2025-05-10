@@ -29,46 +29,46 @@ export function scheduleAnalyticsCronJobs() {
   //   }
   // });
 
-  setInterval(async () => {
-    try {
-      await categoryBatchService.processCategoryStats();
-    } catch (error) {
-      console.error('Error in category stats batch', error);
-    }
-  }, 15 * 1000); 
+  // setInterval(async () => {
+  //   try {
+  //     await categoryBatchService.processCategoryStats();
+  //   } catch (error) {
+  //     console.error('Error in category stats batch', error);
+  //   }
+  // }, 15 * 1000); 
   
-  setInterval(async () => {
-    try {
-      await categoryInteractionBatchService.processUserInteractions();
-    } catch (error) {
-      console.error('Error in user interactions batch', error);
-    }
-  }, 15 * 1000); 
+  // setInterval(async () => {
+  //   try {
+  //     await categoryInteractionBatchService.processUserInteractions();
+  //   } catch (error) {
+  //     console.error('Error in user interactions batch', error);
+  //   }
+  // }, 15 * 1000); 
   
-  cron.schedule('1 0 * * *', async () => {
-    try {
-      await categoryBatchService.resetDailyCounters();
-    } catch (error) {
-      console.error('Error in daily reset cron job', error);
-    }
-  });
+  // cron.schedule('1 0 * * *', async () => {
+  //   try {
+  //     await categoryBatchService.resetDailyCounters();
+  //   } catch (error) {
+  //     console.error('Error in daily reset cron job', error);
+  //   }
+  // });
   
-  cron.schedule('5 0 * * 0', async () => {
-    try {
-      await categoryBatchService.resetWeeklyCounters();
-    } catch (error) {
-      console.error('Error in weekly reset cron job', error);
-    }
-  });
+  // cron.schedule('5 0 * * 0', async () => {
+  //   try {
+  //     await categoryBatchService.resetWeeklyCounters();
+  //   } catch (error) {
+  //     console.error('Error in weekly reset cron job', error);
+  //   }
+  // });
   
   // Clean up expired user interactions once a day at 2:00 AM
-  cron.schedule('0 2 * * *', async () => {
-    try {
-      await categoryInteractionBatchService.cleanupExpiredInteractions();
-    } catch (error) {
-      console.error('Error in interactions cleanup cron job', error);
-    }
-  });
+  // cron.schedule('0 2 * * *', async () => {
+  //   try {
+  //     await categoryInteractionBatchService.cleanupExpiredInteractions();
+  //   } catch (error) {
+  //     console.error('Error in interactions cleanup cron job', error);
+  //   }
+  // });
 
 
 
@@ -82,19 +82,19 @@ export function scheduleAnalyticsCronJobs() {
   // });
 
 
-  setInterval(
-    async () =>{
-      try{
-         await productBatch.processProductActivity();
+  // setInterval(
+  //   async () =>{
+  //     try{
+  //        await productBatch.processProductActivity();
 
 
-      }catch(err){
-        console.error('Error in processing interactions')
+  //     }catch(err){
+  //       console.error('Error in processing interactions')
 
-      }
-    } , 15*1000
+  //     }
+  //   } , 15*10000
 
-  )
+  // )
 
   setInterval(
     async () =>{
@@ -106,7 +106,7 @@ export function scheduleAnalyticsCronJobs() {
         console.error('Error in processing interactions')
 
       }
-    } , 15*1000
+    } , 15*10000
 
   )
   
