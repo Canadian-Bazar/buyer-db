@@ -114,11 +114,11 @@ init().then((dbStatus) => {
 })
 
 
-redisClient.ping()
-                 .then(()=>{
-                  scheduleAnalyticsCronJobs()
+// redisClient.ping()
+//                  .then(()=>{
+//                   scheduleAnalyticsCronJobs()
 
-                 })
+//                  })
 
 
 // For testing

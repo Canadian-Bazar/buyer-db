@@ -24,6 +24,35 @@ export const getProductsController = async (req, res) => {
     let page = validatedData?.page ? parseInt(validatedData.page) : 1;
     let limit = validatedData?.limit ? Math.min(parseInt(validatedData.limit), 50) : 10;
     const skip = (page - 1) * limit;
+
+    if (validatedData.subcategories) {
+      // Get original categories
+      const originalCategories = Array.isArray(validatedData.subcategories) 
+        ? validatedData.subcategories 
+        : [validatedData.subcategories];
+      
+      // Convert to ObjectIds
+      const categoryIds = originalCategories.map(id => new mongoose.Types.ObjectId(id));
+      
+      // Find all child categories
+      const childCategories = await mongoose.model('Category').find({
+        $or: [
+          { parentCategory: { $in: categoryIds } },
+          { ancestors: { $in: categoryIds } }
+        ]
+      }).select('_id').lean();
+      
+      // Get all child category IDs
+      const childIds = childCategories.map(cat => cat._id.toString());
+      
+      console.log(`Found ${childIds.length} child categories`);
+      
+      // Combine original categories with child categories
+      validatedData.subcategories = [
+        ...originalCategories,
+        ...childIds
+      ];
+    }
     
     const pipeline = [
       {
@@ -51,7 +80,7 @@ export const getProductsController = async (req, res) => {
       { $unwind: '$sellerData' }
     ];
     
-    const filterStages = buildProductFilters(validatedData, false, userId);
+    const filterStages = await buildProductFilters(validatedData, false, userId);
     pipeline.push(...filterStages);
     
     pipeline.push({ $skip: skip });

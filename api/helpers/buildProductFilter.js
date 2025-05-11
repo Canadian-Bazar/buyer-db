@@ -15,6 +15,8 @@ export const buildProductFilters = (filterParams, isProductStatsQuery = false, u
   // Determine field prefixes based on query type
   const prefix = isProductStatsQuery ? 'product.' : '';
   const pricingPrefix = isProductStatsQuery ? '' : 'pricingData.';
+
+  
   
   // Initial match conditions
   const initialMatch = {};
@@ -72,6 +74,8 @@ export const buildProductFilters = (filterParams, isProductStatsQuery = false, u
   
   // Seller related filters
   const sellerMatch = {};
+
+
   
   // Enforce approved sellers only
   sellerMatch[isProductStatsQuery ? 'seller.approvalStatus' : 'sellerData.approvalStatus'] = 'approved';
@@ -109,26 +113,24 @@ export const buildProductFilters = (filterParams, isProductStatsQuery = false, u
     stages.push({ $match: sellerMatch });
   }
   
+  // Rest of the function remains the same...
+if (filterParams?.subcategories) {
+  let subcategoryIds = [];
 
-
-  console.log(filterParams?.subcategories)
-  if (filterParams?.subcategories) {
-    let subcategoryIds = [];
-  
-    if (Array.isArray(filterParams.subcategories)) {
-      subcategoryIds = filterParams.subcategories;
-    } else {
-      subcategoryIds = [filterParams.subcategories];
-    }
-  
-    // Convert to ObjectId
-    const objectIds = subcategoryIds.map(id => new mongoose.Types.ObjectId(id));
-  
-    stages.push({ 
-      $match: { [`${prefix}categoryId`]: { $in: objectIds } }
-    });
+  if (Array.isArray(filterParams.subcategories)) {
+    subcategoryIds = filterParams.subcategories;
+  } else {
+    subcategoryIds = [filterParams.subcategories];
   }
-  
+
+  // Convert to ObjectId
+  const objectIds = subcategoryIds.map(id => new mongoose.Types.ObjectId(id));
+
+  stages.push({ 
+    $match: { [`${prefix}categoryId`]: { $in: objectIds } }
+  });
+}
+
   
   if (isProductStatsQuery) {
     stages.push({
