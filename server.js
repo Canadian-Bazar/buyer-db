@@ -78,8 +78,8 @@ init().then((dbStatus) => {
   api.use(rateLimit)
 
   
-  api.use('', v1Routes)
-  api.use('/media', imageProxyRoutes)
+  api.use('/buyer', v1Routes)
+  api.use('/buyer/media', imageProxyRoutes)
 
   api.get('/', (_req, res) =>
     res
