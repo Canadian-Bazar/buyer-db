@@ -22,6 +22,7 @@ import { nanoid } from 'nanoid'
 import { getForgotPasswordBody } from '../sms-templates/forgotPassword.js'
 import { getSignupBody } from '../sms-templates/signup.js'
 import generateVerificationToken from '../utils/generateVerificationToken.js'
+import { truncate } from 'fs'
 /**
  * Controller: signupController
  * Description: Handles user registration by creating a new user in the database.
@@ -162,12 +163,12 @@ export const loginController = async (req, res) => {
     const { accessToken, refreshToken } = generateTokens(user)
     res
       .cookie('accessToken', accessToken, {
-        httpOnly: process.env.NODE_ENV === 'development',
-        secure: !process.env.NODE_ENV === 'development',
+        httpOnly: true,
+        secure: true,
       })
       .cookie('refreshToken', refreshToken, {
-        httpOnly: process.env.NODE_ENV === 'development',
-        secure: !process.env.NODE_ENV === 'development',
+        httpOnly: true,
+        secure: true,
       })
       .status(httpStatus.ACCEPTED)
       .json(buildResponse(httpStatus.ACCEPTED, user))

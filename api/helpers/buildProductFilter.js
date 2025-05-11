@@ -109,13 +109,26 @@ export const buildProductFilters = (filterParams, isProductStatsQuery = false, u
     stages.push({ $match: sellerMatch });
   }
   
-  // Rest of the function remains the same...
-  if (filterParams?.subcategories && Array.isArray(filterParams.subcategories) && filterParams.subcategories.length > 0) {
-    const subcategoryIds = filterParams.subcategories.map(id => new mongoose.Types.ObjectId(id));
+
+
+  console.log(filterParams?.subcategories)
+  if (filterParams?.subcategories) {
+    let subcategoryIds = [];
+  
+    if (Array.isArray(filterParams.subcategories)) {
+      subcategoryIds = filterParams.subcategories;
+    } else {
+      subcategoryIds = [filterParams.subcategories];
+    }
+  
+    // Convert to ObjectId
+    const objectIds = subcategoryIds.map(id => new mongoose.Types.ObjectId(id));
+  
     stages.push({ 
-      $match: { [`${prefix}categoryId`]: { $in: subcategoryIds } }
+      $match: { [`${prefix}categoryId`]: { $in: objectIds } }
     });
   }
+  
   
   if (isProductStatsQuery) {
     stages.push({
