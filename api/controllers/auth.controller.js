@@ -159,7 +159,18 @@ export const loginController = async (req, res) => {
     }
     user.loginAttempts = 0
     await user.save()
-    user = await Buyer.findById(user._id).lean()
+    user = await Buyer.findById(user._id)
+      .select('fullName city state')
+      .populate([{
+        path: 'preferredLanguage',
+        select: 'name _id' ,
+        
+      } ,{
+        path: 'preferredCurrency',
+        select: 'name _id' ,
+
+      }])
+      .lean()
     const { accessToken, refreshToken } = generateTokens(user)
     res
       .cookie('accessToken', accessToken, {
@@ -194,12 +205,12 @@ export const logoutController = async (req, res) => {
   try {
     res
       .clearCookie('accessToken', {
-        httpOnly: process.env.NODE_ENV === 'development',
-        secure: !process.env.NODE_ENV === 'development',
+        httpOnly: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV === 'production',
       })
       .clearCookie('refreshToken', {
-        httpOnly: process.env.NODE_ENV === 'development',
-        secure: !process.env.NODE_ENV === 'development',
+        httpOnly: process.env.NODE_ENV === 'production',
+        secure: !process.env.NODE_ENV === 'production',
       })
       .status(httpStatus.NO_CONTENT)
       .json(buildResponse(httpStatus.NO_CONTENT))
