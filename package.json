@@ -21,7 +21,7 @@
     "@aws-sdk/client-s3": "^3.750.0",
     "@aws-sdk/s3-request-presigner": "^3.750.0",
     "@vonage/server-sdk": "^3.20.1",
-    "bcrypt": "^5.1.1",
+    "bcrypt": "^6.0.0",
     "body-parser": "^1.20.3",
     "chai": "^5.1.2",
     "chalk": "^5.4.1",

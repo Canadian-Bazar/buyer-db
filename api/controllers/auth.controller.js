@@ -171,6 +171,8 @@ export const loginController = async (req, res) => {
 
       }])
       .lean()
+
+      user.role='buyer'
     const { accessToken, refreshToken } = generateTokens(user)
     res
       .cookie('accessToken', accessToken, {

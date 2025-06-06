@@ -126,7 +126,7 @@ export const getProductsController = async (req, res) => {
     const totalPages = Math.ceil(totalProducts / limit);
     
     return res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, {
-      products: processedProducts,
+      docs: processedProducts,
       totalProducts,
       totalPages,
       hasNext: totalPages > page,

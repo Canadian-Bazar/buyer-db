@@ -31,7 +31,7 @@ const __dirname = path.dirname(__filename)
 const api = express()
 const rateLimit = expressRateLimit({
   statusCode: httpStatus.TOO_MANY_REQUESTS,
-  limit: 40,
+  limit: 500,
   message: 'TOO_MANY_REQUESTS',
   windowMs: 10 * 60 * 1000,
 })
@@ -57,7 +57,7 @@ init().then((dbStatus) => {
       allowedHeaders: 'Content-Type',
       credentials: true,
       methods: 'POST, GET, PATCH, PUT, DELETE, HEAD, OPTIONS',
-      origin: 'http://localhost:5173',
+      origin: 'http://localhost:3000',
     }),
   )
 

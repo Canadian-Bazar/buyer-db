@@ -161,6 +161,19 @@ export const resetPasswordValidator = [
       'Password must conntain one digit , one special character , one uppercase letter with minimum length 8',
     ),
 
+  check('confirmPassword')
+    .exists()
+    .withMessage('Confirm Password is required')
+    .not()
+    .isEmpty()
+    .withMessage('Confirm Password cannot be empty')
+    .custom((value, { req }) => {
+      if (value !== req.body.newPassword) {
+        throw new Error('Passwords do not match');
+      }
+      return true;
+    }),
+
   (req, res, next) => validateRequest(req, res, next)
 ]
 
