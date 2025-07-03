@@ -28,7 +28,6 @@ export const REDIS_KEYS={
 
 
 redisClient.on('connect', () => {
-    console.log('Redis client connected');
   });
   
   redisClient.on('error', (err) => {

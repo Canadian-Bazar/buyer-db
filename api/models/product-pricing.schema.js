@@ -34,7 +34,7 @@ const ProductPricingSchema = new mongoose.Schema({
       }
     }],
 
-    leadTime: {
+    leadTime: [{
       min: {
         type: Number,
         default: 1
@@ -42,11 +42,11 @@ const ProductPricingSchema = new mongoose.Schema({
       max: {
         type: Number
       },
-      unit: {
-        type: String,
+      days: {
+        type: Number,
         
       }
-    },
+    }],
     // isOnSale: {
     //   type: Boolean,
     //   default: false

@@ -31,6 +31,7 @@ export const createQuotationController = async( req , res)=>{
 
          await Quotation.create({
             ...validatedData,
+            productId:productExists._id ,
             buyer:req.user._id,
             seller:productExists.seller,
             status:'sent',

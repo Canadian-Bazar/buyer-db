@@ -27,7 +27,6 @@ const SellerSchema = new mongoose.Schema({
     businessType:{
         type:mongoose.Schema.Types.ObjectId,
         ref:'BusinessType',
-        required:true,
     } ,
     businessNumber:{
         type:String ,

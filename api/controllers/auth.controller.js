@@ -4,11 +4,9 @@ import { matchedData } from 'express-validator'
 import httpStatus from 'http-status'
 import jwt  from 'jsonwebtoken'
 import otpGenerator  from 'otp-generator'
-
 import sendMail from '../helpers/sendMail.js'
 import Roles from '../models/role.schema.js'
 import Buyer  from '../models/buyer.schema.js'
-
 import Verifications from '../models/verification.schema.js'
 import buildErrorObject from '../utils/buildErrorObject.js'
 import buildResponse from '../utils/buildResponse.js'
@@ -22,7 +20,6 @@ import { nanoid } from 'nanoid'
 import { getForgotPasswordBody } from '../sms-templates/forgotPassword.js'
 import { getSignupBody } from '../sms-templates/signup.js'
 import generateVerificationToken from '../utils/generateVerificationToken.js'
-import { truncate } from 'fs'
 /**
  * Controller: signupController
  * Description: Handles user registration by creating a new user in the database.
