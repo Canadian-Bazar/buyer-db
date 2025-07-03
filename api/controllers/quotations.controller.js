@@ -8,38 +8,39 @@ import buildErrorObject from '../utils/buildErrorObject.js';
 
 
 
-export const createQuotationController = async( req , res)=>{
-    try{
-        const validatedData = matchedData(req)
-        const {slug}  = validatedData
+export const createQuotationController = async (req, res) => {
+    try {
+        const validatedData = matchedData(req);
+        const { slug } = validatedData;
 
-        const [productExists , quotationExists] = await Promise.all([
-            Product.findOne({slug}) ,
-            Quotation.findOne({slug , buyer:req.user._id , status:{
-                $in: ['sent'  , 'in-progress']
-            }}),
-        ])
+        const product = await Product.findOne({ slug });
 
-        if(!productExists){
-            throw buildErrorObject(httpStatus.BAD_REQUEST , 'Product Not Found')
-        }
-        if(quotationExists){
-            throw buildErrorObject(httpStatus.BAD_REQUEST , 'Quotation already exists')
+        if (!product) {
+            throw buildErrorObject(httpStatus.BAD_REQUEST, 'Product Not Found');
         }
 
-        console.log(validatedData)
+        const existingQuotation = await Quotation.findOne({
+            productId: product._id,
+            buyer: req.user._id,
+            status: { $in: ['sent', 'in-progress'] }
+        });
 
-         await Quotation.create({
+        if (existingQuotation) {
+            throw buildErrorObject(httpStatus.BAD_REQUEST, 'Quotation already exists');
+        }
+
+        await Quotation.create({
             ...validatedData,
-            productId:productExists._id ,
-            buyer:req.user._id,
-            seller:productExists.seller,
-            status:'sent',
-        })
+            productId: product._id,
+            buyer: req.user._id,
+            seller: product.seller,
+        });
 
-        res.status(httpStatus.CREATED).json(buildResponse(httpStatus.CREATED , 'Quotation Sent Successfully'))
-    }catch(err){
-        handleError(res , err)
+        res.status(httpStatus.CREATED).json(
+            buildResponse(httpStatus.CREATED, 'Quotation Sent Successfully')
+        );
+    } catch (err) {
+        handleError(res, err);
     }
-}
+};
 
