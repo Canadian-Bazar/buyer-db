@@ -57,7 +57,7 @@ init().then((dbStatus) => {
       allowedHeaders: 'Content-Type',
       credentials: true,
       methods: 'POST, GET, PATCH, PUT, DELETE, HEAD, OPTIONS',
-      origin: ['http://localhost:3000' , 'http://localhost:3001'],
+      origin: ['http://localhost:3000' , 'http://localhost:5173'],
     }),
   )
 
@@ -78,7 +78,7 @@ init().then((dbStatus) => {
   api.use(rateLimit)
 
   
-  api.use('/buyer', v1Routes)
+  api.use('/', v1Routes)
   api.use('/buyer/media', imageProxyRoutes)
 
   api.get('/', (_req, res) =>
