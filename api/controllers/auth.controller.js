@@ -20,6 +20,7 @@ import { nanoid } from 'nanoid'
 import { getForgotPasswordBody } from '../sms-templates/forgotPassword.js'
 import { getSignupBody } from '../sms-templates/signup.js'
 import generateVerificationToken from '../utils/generateVerificationToken.js'
+import getCookieOptions from '../utils/getCookieOptions.js'
 /**
  * Controller: signupController
  * Description: Handles user registration by creating a new user in the database.
@@ -171,15 +172,12 @@ export const loginController = async (req, res) => {
 
       user.role='buyer'
     const { accessToken, refreshToken } = generateTokens(user)
+
+    const isDev = process.env.NODE_ENV === 'development';
+
     res
-      .cookie('accessToken', accessToken, {
-        httpOnly: true,
-        secure: false,
-      })
-      .cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: false,
-      })
+      .cookie('accessToken', accessToken, getCookieOptions())
+      .cookie('refreshToken', refreshToken, getCookieOptions())
       .status(httpStatus.ACCEPTED)
       .json(buildResponse(httpStatus.ACCEPTED, user))
 
@@ -203,14 +201,8 @@ export const loginController = async (req, res) => {
 export const logoutController = async (req, res) => {
   try {
     res
-      .clearCookie('accessToken', {
-        httpOnly: process.env.NODE_ENV === 'production',
-        secure: process.env.NODE_ENV === 'production',
-      })
-      .clearCookie('refreshToken', {
-        httpOnly: process.env.NODE_ENV === 'production',
-        secure: !process.env.NODE_ENV === 'production',
-      })
+      .clearCookie('accessToken',  getCookieOptions())
+      .clearCookie('refreshToken', getCookieOptions())
       .status(httpStatus.NO_CONTENT)
       .json(buildResponse(httpStatus.NO_CONTENT))
   } catch (err) {
@@ -276,11 +268,7 @@ export const verifyTokensController = async (req, res) => {
           const { accessToken } = generateTokens(user)
 
           res
-            .cookie('accessToken', accessToken, {
-              httpOnly: true,
-              secure,
-            
-            })
+            .cookie('accessToken', accessToken, getCookieOptions())
             .status(httpStatus.CREATED)
             .json(buildResponse(httpStatus.CREATED, {
               success: true,
