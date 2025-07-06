@@ -31,13 +31,32 @@ const MessageSchema = new mongoose.Schema({
     
     messageType: {
         type: String,
-        enum: ['text', 'quotation_created', 'quotation_accepted', 'quotation_rejected'],
+        enum: ['text', 'quotation_created', 'quotation_accepted', 'quotation_rejected' , 'image' , 'link'],
         default: 'text'
     },
     
     isRead: {
         type: Boolean,
         default: false
+    } ,
+
+
+       media: [{
+        url: {
+            type: String,
+            required: true
+        },
+        type: {
+            type: String,
+            enum: ['image', 'pdf'],
+            required: true
+        },
+        name: String,
+        size: Number 
+    }],
+    status :{
+        type:String ,
+        enum :['sent' ,'failed']
     }
 }, {timestamps: true, collection: 'Message'})
 

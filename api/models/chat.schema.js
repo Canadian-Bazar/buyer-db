@@ -35,7 +35,6 @@ const ChatSchema = new mongoose.Schema({
         status: {
             type: String,
             enum: ['pending', 'accepted', 'rejected', 'expired'],
-            default: 'pending'
         },
         createdAt: {
             type: Date,
@@ -43,6 +42,9 @@ const ChatSchema = new mongoose.Schema({
         },
         respondedAt: {
             type: Date
+        } ,
+        link:{
+            type:String ,
         }
     },
     
