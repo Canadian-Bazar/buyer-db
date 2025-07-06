@@ -22,11 +22,11 @@ export const createQuotationController = async (req, res) => {
         const existingQuotation = await Quotation.findOne({
             productId: product._id,
             buyer: req.user._id,
-            status: { $in: ['sent', 'in-progress'] }
+            status: { $in: ['pending', 'in-progress'] }
         });
 
         if (existingQuotation) {
-            throw buildErrorObject(httpStatus.BAD_REQUEST, 'Quotation already exists');
+            throw buildErrorObject(httpStatus.BAD_REQUEST, 'Quotation already pending against seller');
         }
 
         await Quotation.create({

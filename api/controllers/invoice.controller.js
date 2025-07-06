@@ -1,4 +1,3 @@
-
 import Invoice from '../models/invoice.schema.js';
 import handleError from '../utils/handleError.js';
 import buildErrorObject from '../utils/buildErrorObject.js';
@@ -11,7 +10,9 @@ import Message from '../models/messages.schema.js';
 import Orders from '../models/orders.schema.js';
 import Quotation from '../models/quotations.schema.js';
 import BuyerAddress from '../models/buyer-address.schema.js';
+import mongoose from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
+import storeMessageInRedis from '../helpers/storeMessageInRedis.js';
 
 // Helper function to generate unique order ID
 const generateOrderId = () => {
@@ -19,19 +20,19 @@ const generateOrderId = () => {
 };
 
 // Helper function to create order from invoice
-const createOrderFromInvoice = async (invoice, buyerId , chatId) => {
-    // Fetch buyer's default addresses
+const createOrderFromInvoice = async (invoice, buyerId, chatId, session) => {
+    // Fetch buyer's default addresses with session
     const [billingAddress, shippingAddress] = await Promise.all([
         BuyerAddress.findOne({ 
             buyerId: buyerId, 
             addressType: 'Billing', 
             isDefault: true 
-        }),
+        }).session(session),
         BuyerAddress.findOne({ 
             buyerId: buyerId, 
             addressType: 'Shipping', 
             isDefault: true 
-        })
+        }).session(session)
     ]);
 
     if (!billingAddress) {
@@ -50,13 +51,13 @@ const createOrderFromInvoice = async (invoice, buyerId , chatId) => {
         finalPrice: invoice.negotiatedPrice,
         shippingAddress: shippingAddress._id,
         billingAddress: billingAddress._id,
-        paymentMethod: 'pending', // Will be updated when payment is processed
+        paymentMethod: 'pending',
         paymentStatus: 'pending',
         status: 'pending'
     };
 
-    const order = await Orders.create(orderData);
-    return order;
+    const orderArray = await Orders.create([orderData], { session });
+    return orderArray[0];
 };
 
 export const getInvoiceDetails = async (req, res) => {
@@ -64,7 +65,7 @@ export const getInvoiceDetails = async (req, res) => {
         const validatedData = matchedData(req);
         const { invoiceToken } = validatedData;
 
-        let  decoded = jwt.verify(invoiceToken, process.env.INVOICE_SECRET);
+        let decoded = jwt.verify(invoiceToken, process.env.INVOICE_SECRET);
         const invoiceId = decoded.invoiceId;
 
         const invoiceDetails = await Invoice.findById(invoiceId)
@@ -104,17 +105,22 @@ export const getInvoiceDetails = async (req, res) => {
 };
 
 export const acceptInvoice = async (req, res) => {
+    const session = await mongoose.startSession();
+    let isTransactionCommitted = false;
+    
     try {
+        session.startTransaction();
+        
         const validatedData = matchedData(req);
         const { invoiceToken } = validatedData;
         const buyerId = req.user._id;
 
         const decoded = jwt.verify(invoiceToken, process.env.INVOICE_SECRET);
-
-        console.log(decoded)
+        console.log(decoded);
         const invoiceId = decoded.invoiceId;
 
-        const invoice = await Invoice.findById(invoiceId).populate('quotationId');
+        const invoice = await Invoice.findById(invoiceId)
+            .session(session);
 
         if (!invoice) {
             throw buildErrorObject(httpStatus.NOT_FOUND, 'Invoice not found');
@@ -127,57 +133,76 @@ export const acceptInvoice = async (req, res) => {
         if (invoice.status !== 'pending') {
             throw buildErrorObject(httpStatus.CONFLICT, `Invoice has already been ${invoice.status}`);
         }
-        console.log(invoice)
+        
+        console.log(invoice);
 
-        // Check if chat is in correct phase
-        const chat = await Chat.findOne({quotationId:validatedData.quotationId});
+        const quotationId = invoice.quotationId;
+
+        const chat = await Chat.findOne({ quotation: quotationId })
+            .session(session);
+
+        console.log(chat);
+            
         if (chat.phase !== 'invoice_sent') {
             throw buildErrorObject(httpStatus.CONFLICT, 'Invalid chat phase for invoice acceptance');
         }
 
-        // Update invoice status
-        await Invoice.findByIdAndUpdate(invoiceId, {
-            status: 'accepted',
-            buyerId: buyerId,
-            acceptedAt: new Date()
-        });
+        await Invoice.findByIdAndUpdate(
+            invoiceId, 
+            {
+                status: 'accepted',
+                buyerId: buyerId,
+                acceptedAt: new Date()
+            }, 
+            { session }
+        );
 
-        // Update quotation status to accepted
-        await Quotation.findByIdAndUpdate(invoice.quotationId, {
-            status: 'accepted'
-        });
+        await Quotation.findByIdAndUpdate(
+            invoice.quotationId, 
+            { status: 'accepted' }, 
+            { session }
+        );
 
-        // Create order automatically
-        const order = await createOrderFromInvoice(invoice, buyerId , chat._id);
+        const order = await createOrderFromInvoice(invoice, buyerId, chat._id, session);
 
-        // Update chat phase and add order reference
-        await Chat.findByIdAndUpdate(chat._id, {
-            phase: 'order_created',
-            'activeInvoice.status': 'accepted',
-            'activeInvoice.respondedAt': new Date(),
-            order: order._id
-        });
+        await Chat.findByIdAndUpdate(
+            chat._id, 
+            {
+                phase: 'order_created',
+                'activeInvoice.status': 'accepted',
+                'activeInvoice.respondedAt': new Date(),
+                order: order._id
+            }, 
+            { session }
+        );
 
-        // Create system message for invoice acceptance
-        await Message.create({
+        await session.commitTransaction();
+        isTransactionCommitted = true;
+
+        const successMessage = {
             senderId: buyerId,
             senderModel: 'Buyer',
-            content: `Invoice accepted. Order ${order.orderId} created.`,
+            content: `Invoice accepted. Order ${order.orderId} created successfully.`,
             chat: chat._id,
             quotationId: invoice.quotationId,
             messageType: 'text',
             isRead: false
-        });
+        };
+        
+        await storeMessageInRedis(chat._id, successMessage);
 
         res.status(httpStatus.OK).json(
             buildResponse(httpStatus.OK, {
                 message: 'Invoice accepted successfully',
-                orderId: order.orderId,
-                orderDetails: order
+                orderId: order.orderId
             })
         );
 
     } catch (err) {
+        if (!isTransactionCommitted) {
+            await session.abortTransaction();
+        }
+        
         if (err.name === 'JsonWebTokenError') {
             return handleError(res, buildErrorObject(httpStatus.UNAUTHORIZED, 'Invalid invoice token'));
         }
@@ -185,11 +210,18 @@ export const acceptInvoice = async (req, res) => {
             return handleError(res, buildErrorObject(httpStatus.UNAUTHORIZED, 'Invoice token has expired'));
         }
         handleError(res, err);
+    } finally {
+        session.endSession();
     }
 };
 
 export const rejectInvoice = async (req, res) => {
+    const session = await mongoose.startSession();
+    let isTransactionCommitted = false;
+    
     try {
+        session.startTransaction();
+        
         const validatedData = matchedData(req);
         const { invoiceToken, rejectionReason } = validatedData;
         const buyerId = req.user._id;
@@ -197,7 +229,7 @@ export const rejectInvoice = async (req, res) => {
         const decoded = jwt.verify(invoiceToken, process.env.INVOICE_SECRET);
         const invoiceId = decoded.invoiceId;
 
-        const invoice = await Invoice.findById(invoiceId);
+        const invoice = await Invoice.findById(invoiceId).session(session);
 
         if (!invoice) {
             throw buildErrorObject(httpStatus.NOT_FOUND, 'Invoice not found');
@@ -211,34 +243,44 @@ export const rejectInvoice = async (req, res) => {
             throw buildErrorObject(httpStatus.CONFLICT, `Invoice has already been ${invoice.status}`);
         }
 
-        // Check if chat is in correct phase
-       const chat = await Chat.findOne({quotationId:validatedData.quotationId});
+        const chat = await Chat.findOne({ quotation: invoice.quotationId })
+            .session(session);
+            
         if (chat.phase !== 'invoice_sent') {
-            throw buildErrorObject(httpStatus.CONFLICT, 'Invalid chat phase for invoice acceptance');
+            throw buildErrorObject(httpStatus.CONFLICT, 'Invalid chat phase for invoice rejection');
         }
 
-        // Update invoice status
-        await Invoice.findByIdAndUpdate(invoiceId, {
-            status: 'rejected',
-            buyerId: buyerId,
-            rejectedAt: new Date(),
-            rejectionReason: rejectionReason || 'No reason provided'
-        });
+        await Invoice.findByIdAndUpdate(
+            invoiceId, 
+            {
+                status: 'rejected',
+                buyerId: buyerId,
+                rejectedAt: new Date(),
+                rejectionReason: rejectionReason || 'No reason provided'
+            }, 
+            { session }
+        );
 
-        // Update quotation status back to negotiation
-        await Quotation.findByIdAndUpdate(invoice.quotationId, {
-            status: 'negotiation'
-        });
+        await Quotation.findByIdAndUpdate(
+            invoice.quotationId, 
+            { status: 'negotiation' }, 
+            { session }
+        );
 
-        // Update chat phase back to negotiation
-        await Chat.findByIdAndUpdate(chat._id, {
-            phase: 'negotiation',
-            'activeInvoice.status': 'rejected',
-            'activeInvoice.respondedAt': new Date()
-        });
+        await Chat.findByIdAndUpdate(
+            chat._id, 
+            {
+                phase: 'negotiation',
+                'activeInvoice.status': 'rejected',
+                'activeInvoice.respondedAt': new Date()
+            }, 
+            { session }
+        );
 
-        // Create system message for invoice rejection
-        await Message.create({
+        await session.commitTransaction();
+        isTransactionCommitted = true;
+
+        const rejectionMessage = {
             senderId: buyerId,
             senderModel: 'Buyer',
             content: `Invoice rejected. Reason: ${rejectionReason || 'No reason provided'}`,
@@ -246,7 +288,9 @@ export const rejectInvoice = async (req, res) => {
             quotationId: invoice.quotationId,
             messageType: 'text',
             isRead: false
-        });
+        };
+        
+        await storeMessageInRedis(chat._id, rejectionMessage);
 
         res.status(httpStatus.OK).json(
             buildResponse(httpStatus.OK, {
@@ -255,6 +299,10 @@ export const rejectInvoice = async (req, res) => {
         );
 
     } catch (err) {
+        if (!isTransactionCommitted) {
+            await session.abortTransaction();
+        }
+        
         if (err.name === 'JsonWebTokenError') {
             return handleError(res, buildErrorObject(httpStatus.UNAUTHORIZED, 'Invalid invoice token'));
         }
@@ -262,5 +310,7 @@ export const rejectInvoice = async (req, res) => {
             return handleError(res, buildErrorObject(httpStatus.UNAUTHORIZED, 'Invoice token has expired'));
         }
         handleError(res, err);
+    } finally {
+        session.endSession();
     }
 };
