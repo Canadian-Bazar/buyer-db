@@ -70,7 +70,7 @@ export const getInvoiceDetails = async (req, res) => {
 
         const invoiceDetails = await Invoice.findById(invoiceId)
             .populate('quotationId')
-            .populate('sellerId', 'companyName email profileImage')
+            .populate('sellerId', 'companyName email logo')
             .populate('chatId');
 
         if (!invoiceDetails) {
@@ -81,7 +81,6 @@ export const getInvoiceDetails = async (req, res) => {
             throw buildErrorObject(httpStatus.GONE, 'Invoice has expired');
         }
 
-        // Mark as viewed by buyer
         if (!invoiceDetails.viewedByBuyer) {
             await Invoice.findByIdAndUpdate(invoiceId, {
                 viewedByBuyer: true,
