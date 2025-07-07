@@ -12,6 +12,7 @@ import notificationsRoutes from './notifications.routes.js'
 import addressRoutes from './buyer-address.routes.js'
 import blogRoutes from './blogs.routes.js'
 import invoiceRoutes from './invoice.routes.js'
+import orderRoutes from './orders.routes.js'
 
 
 const v1Routes = express.Router()
@@ -30,6 +31,7 @@ v1Routes.use('/notifications' , notificationsRoutes)
 v1Routes.use('/address' , addressRoutes)
 v1Routes.use('/blogs', blogRoutes)
 v1Routes.use('/invoice' , invoiceRoutes)
+v1Routes.use('/orders' ,orderRoutes)
 
 router.use('/api/v1', v1Routes)
 

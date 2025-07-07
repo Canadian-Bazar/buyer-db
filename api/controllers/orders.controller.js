@@ -8,59 +8,17 @@ import Chat from '../models/chat.schema.js';
 import Message from '../models/messages.schema.js';
 import mongoose from 'mongoose';
 
-export const getOrderById = async (req, res) => {
-    try {
-        const { orderId } = req.params;
-        const userId = req.user._id;
-        const userRole = req.user.role; // 'buyer' or 'seller'
-
-        const order = await Orders.findOne({ orderId })
-            .populate({
-                path: 'quotationId',
-                populate: {
-                    path: 'buyer seller',
-                    select: 'fullName companyName email profilePic profileImage'
-                }
-            })
-            .populate('invoiceId')
-            .populate('chatId');
-
-        if (!order) {
-            throw buildErrorObject(httpStatus.NOT_FOUND, 'Order not found');
-        }
-
-        // Check if user has access to this order
-        const quotation = order.quotationId;
-        const hasAccess = (userRole === 'buyer' && quotation.buyer._id.toString() === userId.toString()) ||
-                         (userRole === 'seller' && quotation.seller._id.toString() === userId.toString());
-
-        if (!hasAccess) {
-            throw buildErrorObject(httpStatus.FORBIDDEN, 'You do not have access to this order');
-        }
-
-        res.status(httpStatus.OK).json(
-            buildResponse(httpStatus.OK, order)
-        );
-
-    } catch (err) {
-        handleError(res, err);
-    }
-};
-
-// Update order status (seller only)
-
-
-// Get all orders for buyer
-export const getBuyerOrders = async (req, res) => {
+export const getOrders = async (req, res) => {
     try {
         const validatedData = matchedData(req);
-        const { page = 1, limit = 10, status } = validatedData;
+        const { page = 1, limit = 10, status, search } = validatedData;
         const buyerId = req.user._id;
 
         const effectiveLimit = Math.min(limit, 50);
         const skip = (page - 1) * effectiveLimit;
 
-        // Build aggregation pipeline
+        console.log('sdhbdhsc')
+
         const pipeline = [
             {
                 $lookup: {
@@ -87,7 +45,7 @@ export const getBuyerOrders = async (req, res) => {
         pipeline.push(
             {
                 $lookup: {
-                    from: 'Seller',
+                    from: 'Sellers',
                     localField: 'quotation.seller',
                     foreignField: '_id',
                     as: 'seller'
@@ -106,7 +64,24 @@ export const getBuyerOrders = async (req, res) => {
             },
             {
                 $unwind: '$product'
-            },
+            }
+        );
+
+        // Add search filter if provided
+        if (search) {
+            pipeline.push({
+                $match: {
+                    $or: [
+                        { orderId: { $regex: search, $options: 'i' } },
+                        { 'product.name': { $regex: search, $options: 'i' } },
+                        { 'seller.companyName': { $regex: search, $options: 'i' } },
+                        { 'seller.fullName': { $regex: search, $options: 'i' } }
+                    ]
+                }
+            });
+        }
+
+        pipeline.push(
             {
                 $project: {
                     orderId: 1,
@@ -117,8 +92,9 @@ export const getBuyerOrders = async (req, res) => {
                     estimatedDeliveryDate: 1,
                     deliveredAt: 1,
                     createdAt: 1,
+                    'seller.fullName': 1,
                     'seller.companyName': 1,
-                    'seller.profileImage': 1,
+                    'seller.profilePic': 1,
                     'product.name': 1,
                     'product.images': 1,
                     'quotation.quantity': 1
@@ -131,7 +107,13 @@ export const getBuyerOrders = async (req, res) => {
 
         const orders = await Orders.aggregate(pipeline);
 
-        // Get total count
+        console.log(orders
+            
+        )
+
+        console.log(req.user)
+
+        // Count pipeline for pagination
         const countPipeline = [
             {
                 $lookup: {
@@ -155,23 +137,61 @@ export const getBuyerOrders = async (req, res) => {
             countPipeline.push({ $match: { status } });
         }
 
+        // Add the same lookups for search functionality in count pipeline
+        if (search) {
+            countPipeline.push(
+                {
+                    $lookup: {
+                        from: 'Seller',
+                        localField: 'quotation.seller',
+                        foreignField: '_id',
+                        as: 'seller'
+                    }
+                },
+                {
+                    $unwind: '$seller'
+                },
+                {
+                    $lookup: {
+                        from: 'Product',
+                        localField: 'quotation.productId',
+                        foreignField: '_id',
+                        as: 'product'
+                    }
+                },
+                {
+                    $unwind: '$product'
+                },
+                {
+                    $match: {
+                        $or: [
+                            { orderId: { $regex: search, $options: 'i' } },
+                            { 'product.name': { $regex: search, $options: 'i' } },
+                            { 'seller.companyName': { $regex: search, $options: 'i' } },
+                            { 'seller.fullName': { $regex: search, $options: 'i' } }
+                        ]
+                    }
+                }
+            );
+        }
+
         countPipeline.push({ $count: 'total' });
 
         const [countResult] = await Orders.aggregate(countPipeline);
         const total = countResult?.total || 0;
 
+        const response = {
+            docs: orders,
+            page: parseInt(page),
+            limit: effectiveLimit,
+            total,
+            pages: Math.ceil(total / effectiveLimit),
+            hasNext: skip + effectiveLimit < total,
+            hasPrev: page > 1
+        };
+
         res.status(httpStatus.OK).json(
-            buildResponse(httpStatus.OK, {
-                orders,
-                pagination: {
-                    page: parseInt(page),
-                    limit: effectiveLimit,
-                    total,
-                    pages: Math.ceil(total / effectiveLimit),
-                    hasNext: skip + effectiveLimit < total,
-                    hasPrev: page > 1
-                }
-            })
+            buildResponse(httpStatus.OK, response)
         );
 
     } catch (err) {
@@ -179,52 +199,195 @@ export const getBuyerOrders = async (req, res) => {
     }
 };
 
-
-export const cancelOrder = async (req, res) => {
+export const getOrderById = async (req, res) => {
     try {
         const validatedData = matchedData(req);
-        const { orderId, cancellationReason } = validatedData;
+        const { orderId } = validatedData;
         const buyerId = req.user._id;
 
-        const order = await Orders.findOne({ orderId })
-            .populate('quotationId');
+        console.log(orderId)
 
-        if (!order) {
+        const pipeline = [
+            {
+                $match: { orderId: orderId }
+            },
+            {
+                $lookup: {
+                    from: 'Quotation',
+                    localField: 'quotationId',
+                    foreignField: '_id',
+                    as: 'quotation'
+                }
+            },
+            {
+                $unwind: '$quotation'
+            },
+            {
+                $match: {
+                    'quotation.buyer': new mongoose.Types.ObjectId(buyerId)
+                }
+            },
+            {
+                $lookup: {
+                    from: 'Sellers',
+                    localField: 'quotation.seller',
+                    foreignField: '_id',
+                    as: 'seller'
+                }
+            },
+            {
+                $unwind: '$seller'
+            },
+            {
+                $lookup: {
+                    from: 'BuyerAddresses',
+                    localField: 'shippingAddress',
+                    foreignField: '_id',
+                    as: 'shippingAddress'
+                }
+            },
+            {
+                $unwind: '$shippingAddress'
+            },
+            {
+                $lookup: {
+                    from: 'BuyerAddresses',
+                    localField: 'billingAddress',
+                    foreignField: '_id',
+                    as: 'billingAddress'
+                }
+            },
+            {
+                $unwind: '$billingAddress'
+            },
+            {
+                $lookup: {
+                    from: 'Product',
+                    localField: 'quotation.productId',
+                    foreignField: '_id',
+                    as: 'product'
+                }
+            },
+            {
+                $unwind: '$product'
+            },
+            {
+                $lookup: {
+                    from: 'Chat',
+                    localField: 'chatId',
+                    foreignField: '_id',
+                    as: 'chat'
+                }
+            },
+            {
+                $unwind: '$chat'
+            },
+            {
+                $lookup: {
+                    from: 'Invoice',
+                    localField: 'invoiceId',
+                    foreignField: '_id',
+                    as: 'invoice'
+                }
+            },
+            {
+                $unwind: '$invoice'
+            },
+            {
+                $project: {
+                    orderId: 1,
+                    status: 1,
+                    finalPrice: 1,
+                    paymentMethod: 1,
+                    paymentStatus: 1,
+                    trackingNumber: 1,
+                    estimatedDeliveryDate: 1,
+                    deliveredAt: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    
+                    // COMPLETE SELLER DATA
+                    seller: {
+                        _id: '$seller._id',
+                        fullName: '$seller.fullName',
+                        email: '$seller.email',
+                        phone: '$seller.phone',
+                        profilePic: '$seller.profilePic',
+                        companyName: '$seller.companyName',
+                        businessAddress: '$seller.businessAddress'
+                    },
+                    
+                    product: {
+                        _id: '$product._id',
+                        name: '$product.name',
+                        description: '$product.description',
+                        images: '$product.images',
+                        category: '$product.category',
+                        specifications: '$product.specifications'
+                    },
+                    
+                    quotation: {
+                        _id: '$quotation._id',
+                        quantity: '$quotation.quantity',
+                        quotedPrice: '$quotation.quotedPrice',
+                        validUntil: '$quotation.validUntil',
+                        requirements: '$quotation.requirements',
+                        createdAt: '$quotation.createdAt'
+                    },
+                    
+                    shippingAddress: {
+                        fullName: '$shippingAddress.fullName',
+                        addressLine1: '$shippingAddress.addressLine1',
+                        addressLine2: '$shippingAddress.addressLine2',
+                        city: '$shippingAddress.city',
+                        state: '$shippingAddress.state',
+                        pincode: '$shippingAddress.pincode',
+                        country: '$shippingAddress.country',
+                        phone: '$shippingAddress.phone'
+                    },
+                    
+                    billingAddress: {
+                        fullName: '$billingAddress.fullName',
+                        addressLine1: '$billingAddress.addressLine1',
+                        addressLine2: '$billingAddress.addressLine2',
+                        city: '$billingAddress.city',
+                        state: '$billingAddress.state',
+                        pincode: '$billingAddress.pincode',
+                        country: '$billingAddress.country',
+                        phone: '$billingAddress.phone'
+                    },
+                    
+                    invoice: {
+                        _id: '$invoice._id',
+                        negotiatedPrice: '$invoice.negotiatedPrice',
+                        taxAmount: '$invoice.taxAmount',
+                        shippingCharges: '$invoice.shippingCharges',
+                        paymentTerms: '$invoice.paymentTerms',
+                        deliveryTerms: '$invoice.deliveryTerms',
+                        createdAt: '$invoice.createdAt'
+                    },
+                    
+                    // CHAT DATA
+                    chat: {
+                        _id: '$chat._id',
+                        phase: '$chat.phase',
+                        status: '$chat.status'
+                    },
+                    
+                }
+            }
+        ];
+
+        const order = await Orders.aggregate(pipeline);
+
+        console.log(order)
+
+        if (!order || order.length === 0) {
             throw buildErrorObject(httpStatus.NOT_FOUND, 'Order not found');
         }
 
-        // Check if buyer owns this order
-        if (order.quotationId.buyer.toString() !== buyerId.toString()) {
-            throw buildErrorObject(httpStatus.FORBIDDEN, 'You do not have access to this order');
-        }
-
-        const cancellableStatuses = ['pending', 'confirmed', 'processing', 'ready_to_ship'];
-        if (!cancellableStatuses.includes(order.status)) {
-            throw buildErrorObject(httpStatus.BAD_REQUEST, 'Order cannot be cancelled at this stage');
-        }
-
-        await Orders.findOneAndUpdate(
-            { orderId },
-            {
-                status: 'cancelled',
-                cancellationReason: cancellationReason || 'Cancelled by buyer'
-            }
-        );
-
-        await Message.create({
-            senderId: buyerId,
-            senderModel: 'Buyer',
-            content: `Order cancelled. Reason: ${cancellationReason || 'Cancelled by buyer'}`,
-            chat: order.chatId,
-            quotationId: order.quotationId._id,
-            messageType: 'text',
-            isRead: false
-        });
-
         res.status(httpStatus.OK).json(
-            buildResponse(httpStatus.OK, {
-                message: 'Order cancelled successfully'
-            })
+            buildResponse(httpStatus.OK, order[0])
         );
 
     } catch (err) {
