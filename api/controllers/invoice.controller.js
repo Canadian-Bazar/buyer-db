@@ -69,9 +69,14 @@ export const getInvoiceDetails = async (req, res) => {
         const invoiceId = decoded.invoiceId;
 
         const invoiceDetails = await Invoice.findById(invoiceId)
-            .populate('quotationId')
-            .populate('sellerId', 'companyName email logo')
-            .populate('chatId');
+            .populate({
+                path: 'quotationId',
+                populate: {
+                    path: 'productId',
+                    select: 'name images category description'
+                }
+            })
+            .populate('sellerId', 'companyName email profileImage phone city state')
 
         if (!invoiceDetails) {
             throw buildErrorObject(httpStatus.NOT_FOUND, 'Invoice not found');
@@ -81,12 +86,24 @@ export const getInvoiceDetails = async (req, res) => {
             throw buildErrorObject(httpStatus.GONE, 'Invoice has expired');
         }
 
+        // Update viewing status if not already viewed
         if (!invoiceDetails.viewedByBuyer) {
             await Invoice.findByIdAndUpdate(invoiceId, {
                 viewedByBuyer: true,
                 viewedAt: new Date()
             });
+            
+            // Update the local object to reflect the change
+            invoiceDetails.viewedByBuyer = true;
+            invoiceDetails.viewedAt = new Date();
         }
+
+        // Structure the response to match frontend expectations
+        const response = {
+            data: {
+                response: invoiceDetails
+            }
+        };
 
         res.status(httpStatus.OK).json(
             buildResponse(httpStatus.OK, invoiceDetails)
