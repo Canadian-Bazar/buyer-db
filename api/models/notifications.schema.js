@@ -33,7 +33,7 @@ const BuyerNotificationSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['quote_accepted', 'quote_rejected', 'quote_updated', 'admin_message', 'system_alert', 'other'],
+        enum: ['quote_accepted', 'quote_rejected', 'quote_updated', 'admin_message', 'system_alert', 'other' , 'negotiation' , 'invoice_created'],
         required: true,
         index: true
     },

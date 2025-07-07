@@ -4,8 +4,7 @@ import handleError from '../utils/handleError.js';
 import httpStatus from 'http-status';
 import {matchedData} from 'express-validator'
 
-
-export const getNotificationsController = async (req, res) => { 
+export const getNotificationsController = async (req, res) => {
     try {
         const { page = 1, limit = 10, unread, time } = matchedData(req);
         const effectiveLimit = Math.min(limit, 50);
@@ -18,17 +17,42 @@ export const getNotificationsController = async (req, res) => {
 
         const sortOrder = { createdAt: time === 'asc' ? 1 : -1 };
 
+        // Get notifications with pagination
         const notifications = await BuyerNotifications.find(query)
             .sort(sortOrder)
             .skip(skip)
             .limit(effectiveLimit);
 
+        // Get total count for pagination calculations
         const totalNotifications = await BuyerNotifications.countDocuments(query);
-        res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, { notifications, totalNotifications }));
+
+        // Calculate pagination metadata
+        const totalPages = Math.ceil(totalNotifications / effectiveLimit);
+        const currentPage = parseInt(page);
+        const hasNext = currentPage < totalPages;
+        const hasPrev = currentPage > 1;
+
+        // Build response object with pagination
+        const response = {
+            docs: notifications,
+            totalDocs: totalNotifications,
+            limit: effectiveLimit,
+            page: currentPage,
+            totalPages,
+            hasNext,
+            hasPrev,
+            nextPage: hasNext ? currentPage + 1 : null,
+            prevPage: hasPrev ? currentPage - 1 : null
+        };
+
+        res.status(httpStatus.OK).json(
+            buildResponse(httpStatus.OK, response)
+        );
+
     } catch (err) {
         handleError(res, err);
     }
-}
+};
 
 
 
