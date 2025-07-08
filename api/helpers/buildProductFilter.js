@@ -146,14 +146,23 @@ if (filterParams?.subcategories) {
     
     stages.push({
       $addFields: {
-        firstTier: { $arrayElemAt: ['$pricing.quantityPriceTiers', 0] },
+        // Fix: Add null checks for arrays before using $size
+        safePricingTiers: { 
+          $ifNull: ['$pricing.quantityPriceTiers', []] 
+        }
+      }
+    });
+    
+    stages.push({
+      $addFields: {
+        firstTier: { $arrayElemAt: ['$safePricingTiers', 0] },
         lastTier: { 
           $arrayElemAt: [
-            '$pricing.quantityPriceTiers', 
-            { $subtract: [{ $size: '$pricing.quantityPriceTiers' }, 1] }
+            '$safePricingTiers', 
+            { $subtract: [{ $size: '$safePricingTiers' }, 1] }
           ] 
         },
-        tiersCount: { $size: '$pricing.quantityPriceTiers' },
+        tiersCount: { $size: '$safePricingTiers' },
       }
     });
     
@@ -164,7 +173,7 @@ if (filterParams?.subcategories) {
         hasUnlimitedTier: { $eq: ['$lastTier.max', null] },
         moq: { 
           $ifNull: [
-            { $arrayElemAt: ['$pricing.quantityPriceTiers.min', 0] },
+            { $arrayElemAt: ['$safePricingTiers.min', 0] },
             1
           ] 
         },
@@ -180,17 +189,26 @@ if (filterParams?.subcategories) {
     // For direct Product queries, use the fields already available
     stages.push({
       $addFields: {
-        firstTier: { $arrayElemAt: ['$pricingData.quantityPriceTiers', 0] },
+        // Fix: Add null checks for arrays before using $size
+        safePricingTiers: { 
+          $ifNull: ['$pricingData.quantityPriceTiers', []] 
+        }
+      }
+    });
+    
+    stages.push({
+      $addFields: {
+        firstTier: { $arrayElemAt: ['$safePricingTiers', 0] },
         lastTier: { 
           $arrayElemAt: [
-            '$pricingData.quantityPriceTiers', 
-            { $subtract: [{ $size: '$pricingData.quantityPriceTiers' }, 1] }
+            '$safePricingTiers', 
+            { $subtract: [{ $size: '$safePricingTiers' }, 1] }
           ] 
         },
-        tiersCount: { $size: '$pricingData.quantityPriceTiers' },
+        tiersCount: { $size: '$safePricingTiers' },
         moq: { 
           $ifNull: [
-            { $arrayElemAt: ['$pricingData.quantityPriceTiers.min', 0] },
+            { $arrayElemAt: ['$safePricingTiers.min', 0] },
             1
           ] 
         },
