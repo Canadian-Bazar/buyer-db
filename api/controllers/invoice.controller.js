@@ -287,9 +287,10 @@ export const rejectInvoice = async (req, res) => {
             chat._id, 
             {
                 phase: 'negotiation',
-                'activeInvoice.status': 'rejected',
-                'activeInvoice.respondedAt': new Date()
+                activeInvoice:null
             }, 
+
+            
             { session }
         );
 
