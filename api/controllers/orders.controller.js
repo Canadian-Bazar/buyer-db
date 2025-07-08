@@ -94,7 +94,7 @@ export const getOrders = async (req, res) => {
                     createdAt: 1,
                     'seller.fullName': 1,
                     'seller.companyName': 1,
-                    'seller.profilePic': 1,
+                    'seller.logo': 1,
                     'product.name': 1,
                     'product.images': 1,
                     'quotation.quantity': 1
@@ -312,7 +312,7 @@ export const getOrderById = async (req, res) => {
                         fullName: '$seller.fullName',
                         email: '$seller.email',
                         phone: '$seller.phone',
-                        profilePic: '$seller.profilePic',
+                        logo: '$seller.logo',
                         companyName: '$seller.companyName',
                         businessAddress: '$seller.businessAddress'
                     },
