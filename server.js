@@ -73,7 +73,10 @@ init().then((dbStatus) => {
     }),
   )
 
-  api.use(helmet())
+  api.use(helmet({
+      crossOriginResourcePolicy: false,
+
+  }))
   api.use(morgan('dev'))
   api.use(rateLimit)
 

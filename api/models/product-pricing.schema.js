@@ -11,11 +11,7 @@ const ProductPricingSchema = new mongoose.Schema({
       required: true,
       index: true
     },
-    basePrice: {
-      type: Number,
-      required: true,
-      min: 0
-    },
+   
   
     quantityPriceTiers: [{
       min: {

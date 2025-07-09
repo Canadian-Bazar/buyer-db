@@ -645,7 +645,7 @@ export const sendEmailVerificationLink = async(req , res)=>{
     const validatedData = matchedData(req)
     let user = await Buyer.findOne({ email: validatedData.email }).lean() 
     if(user){
-      throw buildErrorObject(httpStatus.CONFLICT, 'This email is already in usee')
+      throw buildErrorObject(httpStatus.CONFLICT, 'This email is already in user')
     }
     const payload = {
       _id:req.user._id ,

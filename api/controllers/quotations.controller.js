@@ -26,7 +26,7 @@ export const createQuotationController = async (req, res) => {
         });
 
         if (existingQuotation) {
-            throw buildErrorObject(httpStatus.BAD_REQUEST, 'Quotation already pending against seller');
+            throw buildErrorObject(httpStatus.BAD_REQUEST, 'Quotation already pending for same product');
         }
 
         await Quotation.create({
