@@ -249,17 +249,17 @@ export const getOrderById = async (req, res) => {
             {
                 $unwind: '$shippingAddress'
             },
-            {
-                $lookup: {
-                    from: 'BuyerAddresses',
-                    localField: 'billingAddress',
-                    foreignField: '_id',
-                    as: 'billingAddress'
-                }
-            },
-            {
-                $unwind: '$billingAddress'
-            },
+            // {
+            //     $lookup: {
+            //         from: 'BuyerAddresses',
+            //         localField: 'billingAddress',
+            //         foreignField: '_id',
+            //         as: 'billingAddress'
+            //     }
+            // },
+            // {
+            //     $unwind: '$billingAddress'
+            // },
             {
                 $lookup: {
                     from: 'Product',
@@ -346,16 +346,16 @@ export const getOrderById = async (req, res) => {
                         phone: '$shippingAddress.phone'
                     },
                     
-                    billingAddress: {
-                        fullName: '$billingAddress.fullName',
-                        addressLine1: '$billingAddress.addressLine1',
-                        addressLine2: '$billingAddress.addressLine2',
-                        city: '$billingAddress.city',
-                        state: '$billingAddress.state',
-                        pincode: '$billingAddress.pincode',
-                        country: '$billingAddress.country',
-                        phone: '$billingAddress.phone'
-                    },
+                    // billingAddress: {
+                    //     fullName: '$billingAddress.fullName',
+                    //     addressLine1: '$billingAddress.addressLine1',
+                    //     addressLine2: '$billingAddress.addressLine2',
+                    //     city: '$billingAddress.city',
+                    //     state: '$billingAddress.state',
+                    //     pincode: '$billingAddress.pincode',
+                    //     country: '$billingAddress.country',
+                    //     phone: '$billingAddress.phone'
+                    // },
                     
                     invoice: {
                         _id: '$invoice._id',

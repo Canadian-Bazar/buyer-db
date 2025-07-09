@@ -21,23 +21,12 @@ const generateOrderId = () => {
 
 // Helper function to create order from invoice
 const createOrderFromInvoice = async (invoice, buyerId, chatId, session) => {
-    // Fetch buyer's default addresses with session
-    const [billingAddress, shippingAddress] = await Promise.all([
-        BuyerAddress.findOne({ 
-            buyerId: buyerId, 
-            addressType: 'Billing', 
-            isDefault: true 
-        }).session(session),
-        BuyerAddress.findOne({ 
-            buyerId: buyerId, 
-            addressType: 'Shipping', 
-            isDefault: true 
-        }).session(session)
-    ]);
-
-    if (!billingAddress) {
-        throw buildErrorObject(httpStatus.BAD_REQUEST, 'Buyer must have a default billing address');
-    }
+    // Fetch buyer's default shipping address with session
+    const shippingAddress = await BuyerAddress.findOne({
+        buyerId: buyerId,
+        addressType: 'Shipping',
+        isDefault: true
+    }).session(session);
 
     if (!shippingAddress) {
         throw buildErrorObject(httpStatus.BAD_REQUEST, 'Buyer must have a default shipping address');
@@ -50,7 +39,7 @@ const createOrderFromInvoice = async (invoice, buyerId, chatId, session) => {
         chatId: chatId,
         finalPrice: invoice.negotiatedPrice,
         shippingAddress: shippingAddress._id,
-        billingAddress: billingAddress._id,
+        // Remove billingAddress since we're not checking for it
         paymentMethod: 'pending',
         paymentStatus: 'pending',
         status: 'pending'

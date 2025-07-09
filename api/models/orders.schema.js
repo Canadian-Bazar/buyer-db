@@ -39,11 +39,11 @@ const OrderSchema = new mongoose.Schema({
         required: true
     },
     
-    billingAddress: {
-        type: mongoose.Types.ObjectId,
-        ref: 'Address',
-        required: true
-    },
+    // billingAddress: {
+    //     type: mongoose.Types.ObjectId,
+    //     ref: 'Address',
+    //     required: true
+    // },
     
     status: {
         type: String,
