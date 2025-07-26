@@ -40,12 +40,7 @@ export const createCareer = async (req, res) => {
 
 
 
-    if (!req.files || req.files.length === 0) {
-      throw buildErrorObject(httpStatus.BAD_REQUEST, 'No resume file uploaded');
-    }
-
-    const uploadedFiles = await uploadFile(req.files);
-    validatedData.resume = uploadedFiles[0];
+   
 
     const categoryExists = await Category.exists({
       _id: validatedData.category,
@@ -55,10 +50,21 @@ export const createCareer = async (req, res) => {
       throw buildErrorObject(httpStatus.BAD_REQUEST, 'No such category found');
     }
 
-    const existingCareer = await Career.findOne({
-      email: validatedData.email,
-      isVerified: { $exists: true },
-    });
+  const existingCareer = await Career.findOne({
+  email: validatedData.email,
+  isVerified: { $exists: true },
+});
+
+if (!req.files || req.files.length === 0) {
+  if (!existingCareer || !existingCareer.resume) {
+    throw buildErrorObject(httpStatus.BAD_REQUEST, 'No resume file uploaded');
+  } else {
+    validatedData.resume = existingCareer.resume;
+  }
+} else {
+  const uploadedFiles = await uploadFile(req.files);
+  validatedData.resume = uploadedFiles[0];
+}
 
     let careerEntry;
     if (existingCareer) {
@@ -108,7 +114,9 @@ export const getDataToPrefill = async (req, res) => {
 
     const buyerAddress = await BuyerAddress.findOne({ buyerId: userId, isDefault: true });
 
-    const existingCareer = await Career.findOne({ email: user.email }).select('resume');
+    const existingCareer = await Career.findOne({ email: user.email });
+
+    console.log('existingCareer', existingCareer);
 
     const prefillData = {
       email: user.email || '',
