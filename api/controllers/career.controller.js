@@ -1,4 +1,4 @@
-import Carrer from '../models/career.model.js';
+import Career from '../models/career.schema.js';
 import httpStatus from 'http-status';
 import handleError from '../utils/handleError.js';
 import buildErrorObject from '../utils/buildErrorObject.js';
@@ -55,14 +55,14 @@ export const createCareer = async (req, res) => {
       throw buildErrorObject(httpStatus.BAD_REQUEST, 'No such category found');
     }
 
-    const existingCareer = await Carrer.findOne({
+    const existingCareer = await Career.findOne({
       email: validatedData.email,
       isVerified: { $exists: true },
     });
 
     let careerEntry;
     if (existingCareer) {
-      careerEntry = await Carrer.findByIdAndUpdate(
+      careerEntry = await Career.findByIdAndUpdate(
         existingCareer._id,
         {
           $set: {
@@ -73,7 +73,7 @@ export const createCareer = async (req, res) => {
         { new: true }
       );
     } else {
-      careerEntry = await Carrer.create({
+      careerEntry = await Career.create({
         ...validatedData,
         userId: userId,
       });
@@ -102,26 +102,31 @@ export const getDataToPrefill = async (req, res) => {
   try {
     const userId = req.user?._id;
     const user = await Buyer.findById(userId).select('email phoneNumber fullName');
-    const buyerAddress = await BuyerAddress.findOne({ buyerId: userId, isDefault: true });
-
-    const prefillData = {
-      email: user?.email || '',
-      phoneNumber: user?.phoneNumber || '',
-      fullName: user?.fullName || '',
-      street: buyerAddress?.street || '',
-      city: buyerAddress?.city || '',
-      state: buyerAddress?.state || '',
-      postalCode: buyerAddress?.postalCode || '',
-    };
     if (!user) {
       throw buildErrorObject(httpStatus.NOT_FOUND, 'User not found');
     }
 
-    res.status(httpStatus.OK).json(buildResponse(httpStatus.OK,prefillData));
+    const buyerAddress = await BuyerAddress.findOne({ buyerId: userId, isDefault: true });
+
+    const existingCareer = await Career.findOne({ email: user.email }).select('resume');
+
+    const prefillData = {
+      email: user.email || '',
+      phoneNumber: user.phoneNumber || '',
+      fullName: user.fullName || '',
+      street: buyerAddress?.street || '',
+      city: buyerAddress?.city || '',
+      state: buyerAddress?.state || '',
+      postalCode: buyerAddress?.postalCode || '',
+      resume: existingCareer?.resume || '',  
+    };
+
+    res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, prefillData));
   } catch (err) {
     handleError(res, err);
   }
-}
+};
+
 
 export const verifyEmail = async (req, res) => {
   try {
@@ -145,7 +150,7 @@ export const verifyEmail = async (req, res) => {
       throw buildErrorObject(httpStatus.BAD_REQUEST, 'Invalid token payload');
     }
 
-    const application = await Carrer.findOne({ email });
+    const application = await Career.findOne({ email });
     if (!application) {
       throw buildErrorObject(httpStatus.NOT_FOUND, 'Career application not found');
     }
