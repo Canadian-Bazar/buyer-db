@@ -681,6 +681,7 @@ export const verifyEmail = async(req , res)=>{
     
 
     try{
+      
       user =  jwt.verify(decryptedToken , process.env.VERIFICATION_SECRET)
 
       console.log(user)
