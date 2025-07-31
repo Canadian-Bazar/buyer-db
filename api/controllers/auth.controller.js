@@ -171,13 +171,12 @@ export const loginController = async (req, res) => {
       .lean()
 
       user.role='buyer'
-    const { accessToken, refreshToken } = generateTokens(user)
+const { buyerAccessToken, buyerRefreshToken } = generateTokens(user)
 
-    const isDev = process.env.NODE_ENV === 'development';
 
     res
-      .cookie('accessToken', accessToken, getCookieOptions())
-      .cookie('refreshToken', refreshToken, getCookieOptions())
+      .cookie('buyerAccessToken', buyerAccessToken, getCookieOptions())
+      .cookie('buyerRefreshToken', buyerRefreshToken, getCookieOptions())
       .status(httpStatus.ACCEPTED)
       .json(buildResponse(httpStatus.ACCEPTED, user))
 
@@ -201,8 +200,8 @@ export const loginController = async (req, res) => {
 export const logoutController = async (req, res) => {
   try {
     res
-      .clearCookie('accessToken',  getCookieOptions())
-      .clearCookie('refreshToken', getCookieOptions())
+      .clearCookie('buyerAccessToken',  getCookieOptions())
+      .clearCookie('buyerAccessToken', getCookieOptions())
       .status(httpStatus.NO_CONTENT)
       .json(buildResponse(httpStatus.NO_CONTENT))
   } catch (err) {
@@ -226,8 +225,8 @@ export const logoutController = async (req, res) => {
  */
 export const verifyTokensController = async (req, res) => {
   try {
-    let accessToken = req.cookies.accessToken
-    let refreshToken = req.cookies.refreshToken
+    let accessToken = req.cookies.buyerAccessToken
+    let refreshToken = req.cookies.buyerRefreshToken
 
     if (!accessToken) {
       throw buildErrorObject(httpStatus.UNAUTHORIZED, 'ACCESS_TOKEN_MISSING')
@@ -268,7 +267,7 @@ export const verifyTokensController = async (req, res) => {
           const { accessToken } = generateTokens(user)
 
           res
-            .cookie('accessToken', accessToken, getCookieOptions())
+            .cookie('buyerAccessToken', accessToken, getCookieOptions())
             .status(httpStatus.CREATED)
             .json(buildResponse(httpStatus.CREATED, {
               success: true,

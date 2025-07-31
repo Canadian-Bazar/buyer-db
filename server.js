@@ -54,7 +54,7 @@ init().then((dbStatus) => {
   api.use(cookieParser())
   api.use(
     cors({
-      allowedHeaders: 'Content-Type',
+      allowedHeaders: ['Content-Type', 'x-user-role'] ,
       credentials: true,
       methods: 'POST, GET, PATCH, PUT, DELETE, HEAD, OPTIONS',
       origin: [process.env.FRONTEND_URL , 'http://localhost:5173']

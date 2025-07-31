@@ -17,7 +17,7 @@ import decrypt from '../utils/decrypt.js'
 
 export const optionalAuth = (req, res, next) => {
     try {
-      let token = req.cookies.accessToken;
+      let token = req.cookies.buyerAccessToken;
       if (!token) {
         // No token = guest user
         req.user = null;

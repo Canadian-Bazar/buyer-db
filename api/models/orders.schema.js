@@ -33,17 +33,23 @@ const OrderSchema = new mongoose.Schema({
         required: true
     },
     
-    shippingAddress: {
-        type: mongoose.Types.ObjectId,
-        ref: 'Address',
-        required: true
+       shippingAddress: {
+        street : String ,
+        city:String ,
+        state:String ,
+        postalCode:String
+
+
+
     },
-    
-    // billingAddress: {
-    //     type: mongoose.Types.ObjectId,
-    //     ref: 'Address',
-    //     required: true
-    // },
+
+
+    billingAddress:{
+         street : String ,
+        city:String ,
+        state:String ,
+        postalCode:String
+    } ,
     
     status: {
         type: String,
