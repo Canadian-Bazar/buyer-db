@@ -10,6 +10,12 @@ const OrderSchema = new mongoose.Schema({
         index: true
     },
     
+
+    paymentType:{
+        type:String ,
+        enum:['Cash On Delivery' , 'Online'] ,
+        default:'Cash On Delivery'
+    } ,
     quotationId: {
         type: mongoose.Types.ObjectId,
         ref: 'Quotation',
