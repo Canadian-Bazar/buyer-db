@@ -49,6 +49,23 @@ init().then((dbStatus) => {
   verifyAWSConnection()
 
 
+
+
+   api.use(
+  cors({
+     origin:[process.env.FRONTEND_URL, 'https://seller-canadian-bazar.duckdns.org'] ,   
+    credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
+    allowedHeaders: [
+      'Content-Type', 
+      'Authorization', 
+      'X-Requested-With',
+      'Accept',
+      'Origin'
+    ]
+  })
+);
+
   api.use(bodyParser.json({ limit: '32mb' }))
   api.use(bodyParser.urlencoded({ limit: '32mb', extended: false }))
   api.use(cookieParser())
@@ -77,6 +94,7 @@ init().then((dbStatus) => {
       crossOriginResourcePolicy: false,
 
   }))
+
   api.use(morgan('dev'))
   api.use(rateLimit)
 
