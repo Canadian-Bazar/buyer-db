@@ -25,7 +25,7 @@ import handleError from '../utils/handleError.js'
 
 export const requireAuth =(req , res , next)=>{
   try{
-    let token = req.cookies.accessToken
+    let token = req.cookies.buyerAccessToken
     if(!token){
       throw buildErrorObject(httpStatus.UNAUTHORIZED , 'UNAUTHORIZED')
     }

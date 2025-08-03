@@ -10,6 +10,12 @@ const OrderSchema = new mongoose.Schema({
         index: true
     },
     
+
+    paymentType:{
+        type:String ,
+        enum:['Cash On Delivery' , 'Online'] ,
+        default:'Cash On Delivery'
+    } ,
     quotationId: {
         type: mongoose.Types.ObjectId,
         ref: 'Quotation',
@@ -33,17 +39,23 @@ const OrderSchema = new mongoose.Schema({
         required: true
     },
     
-    shippingAddress: {
-        type: mongoose.Types.ObjectId,
-        ref: 'Address',
-        required: true
+       shippingAddress: {
+        street : String ,
+        city:String ,
+        state:String ,
+        postalCode:String
+
+
+
     },
-    
-    // billingAddress: {
-    //     type: mongoose.Types.ObjectId,
-    //     ref: 'Address',
-    //     required: true
-    // },
+
+
+    billingAddress:{
+         street : String ,
+        city:String ,
+        state:String ,
+        postalCode:String
+    } ,
     
     status: {
         type: String,
