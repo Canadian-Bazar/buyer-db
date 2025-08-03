@@ -7,7 +7,6 @@ import httpStatus from 'http-status';
 import Chat from '../models/chat.schema.js';
 import Message from '../models/messages.schema.js';
 import mongoose from 'mongoose';
-
 export const getOrders = async (req, res) => {
     try {
         const validatedData = matchedData(req);
@@ -16,8 +15,6 @@ export const getOrders = async (req, res) => {
 
         const effectiveLimit = Math.min(limit, 50);
         const skip = (page - 1) * effectiveLimit;
-
-        console.log('sdhbdhsc')
 
         const pipeline = [
             {
@@ -106,12 +103,6 @@ export const getOrders = async (req, res) => {
         );
 
         const orders = await Orders.aggregate(pipeline);
-
-        console.log(orders
-            
-        )
-
-        console.log(req.user)
 
         // Count pipeline for pagination
         const countPipeline = [
@@ -205,8 +196,6 @@ export const getOrderById = async (req, res) => {
         const { orderId } = validatedData;
         const buyerId = req.user._id;
 
-        console.log(orderId)
-
         const pipeline = [
             {
                 $match: { orderId: orderId }
@@ -249,17 +238,6 @@ export const getOrderById = async (req, res) => {
             {
                 $unwind: '$shippingAddress'
             },
-            // {
-            //     $lookup: {
-            //         from: 'BuyerAddresses',
-            //         localField: 'billingAddress',
-            //         foreignField: '_id',
-            //         as: 'billingAddress'
-            //     }
-            // },
-            // {
-            //     $unwind: '$billingAddress'
-            // },
             {
                 $lookup: {
                     from: 'Product',
@@ -346,17 +324,6 @@ export const getOrderById = async (req, res) => {
                         phone: '$shippingAddress.phone'
                     },
                     
-                    // billingAddress: {
-                    //     fullName: '$billingAddress.fullName',
-                    //     addressLine1: '$billingAddress.addressLine1',
-                    //     addressLine2: '$billingAddress.addressLine2',
-                    //     city: '$billingAddress.city',
-                    //     state: '$billingAddress.state',
-                    //     pincode: '$billingAddress.pincode',
-                    //     country: '$billingAddress.country',
-                    //     phone: '$billingAddress.phone'
-                    // },
-                    
                     invoice: {
                         _id: '$invoice._id',
                         negotiatedPrice: '$invoice.negotiatedPrice',
@@ -372,15 +339,12 @@ export const getOrderById = async (req, res) => {
                         _id: '$chat._id',
                         phase: '$chat.phase',
                         status: '$chat.status'
-                    },
-                    
+                    }
                 }
             }
         ];
 
         const order = await Orders.aggregate(pipeline);
-
-        console.log(order)
 
         if (!order || order.length === 0) {
             throw buildErrorObject(httpStatus.NOT_FOUND, 'Order not found');
