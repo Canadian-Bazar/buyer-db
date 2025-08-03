@@ -56,6 +56,7 @@ init().then((dbStatus) => {
     cors({
       allowedHeaders: ['Content-Type', 'x-user-role'] ,
       credentials: true,
+      
       methods: 'POST, GET, PATCH, PUT, DELETE, HEAD, OPTIONS',
       origin: [process.env.FRONTEND_URL , 'http://localhost:5173']
     }),
