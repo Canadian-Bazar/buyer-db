@@ -37,12 +37,18 @@ export const getReviews = async (req, res) => {
 
         let sort = {};
         if (validatedData.sortByRating === 'asc' || validatedData.sortByRating === 'desc') {
-            sort.rating = validatedData.sortByRating === 'asc' ? 1 : -1;
-        } else if (validatedData.oldestFirst) {
-            sort.createdAt = 1;
-        } else {
-            sort.createdAt = -1;
-        }
+                sort.rating = validatedData.sortByRating === 'asc' ? 1 : -1;
+                }
+
+             const oldestFirst = validatedData.oldestFirst === 'true';
+
+                if (oldestFirst) {
+                    sort.createdAt = 1;
+                } else {
+                    sort.createdAt = -1;
+                }
+
+
 
         const docs = await Review.find(query)
             .populate('buyer', 'name email profilePic avatar')
