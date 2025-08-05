@@ -7,6 +7,7 @@ import httpStatus from 'http-status';
 import Chat from '../models/chat.schema.js';
 import Message from '../models/messages.schema.js';
 import mongoose from 'mongoose';
+
 export const getOrders = async (req, res) => {
     try {
         const validatedData = matchedData(req);
@@ -227,17 +228,7 @@ export const getOrderById = async (req, res) => {
             {
                 $unwind: '$seller'
             },
-            {
-                $lookup: {
-                    from: 'BuyerAddresses',
-                    localField: 'shippingAddress',
-                    foreignField: '_id',
-                    as: 'shippingAddress'
-                }
-            },
-            {
-                $unwind: '$shippingAddress'
-            },
+            // REMOVED: BuyerAddresses lookup - address is stored as JSON
             {
                 $lookup: {
                     from: 'Product',
@@ -284,7 +275,7 @@ export const getOrderById = async (req, res) => {
                     createdAt: 1,
                     updatedAt: 1,
                     
-                    // COMPLETE SELLER DATA
+                    // SELLER DATA
                     seller: {
                         _id: '$seller._id',
                         fullName: '$seller.fullName',
@@ -313,16 +304,9 @@ export const getOrderById = async (req, res) => {
                         createdAt: '$quotation.createdAt'
                     },
                     
-                    shippingAddress: {
-                        fullName: '$shippingAddress.fullName',
-                        addressLine1: '$shippingAddress.addressLine1',
-                        addressLine2: '$shippingAddress.addressLine2',
-                        city: '$shippingAddress.city',
-                        state: '$shippingAddress.state',
-                        pincode: '$shippingAddress.pincode',
-                        country: '$shippingAddress.country',
-                        phone: '$shippingAddress.phone'
-                    },
+                    shippingAddress: 1,  
+                    
+                    billingAddress: 1,   
                     
                     invoice: {
                         _id: '$invoice._id',
@@ -334,7 +318,6 @@ export const getOrderById = async (req, res) => {
                         createdAt: '$invoice.createdAt'
                     },
                     
-                    // CHAT DATA
                     chat: {
                         _id: '$chat._id',
                         phase: '$chat.phase',
@@ -346,9 +329,7 @@ export const getOrderById = async (req, res) => {
 
         const order = await Orders.aggregate(pipeline);
 
-        if (!order || order.length === 0) {
-            throw buildErrorObject(httpStatus.NOT_FOUND, 'Order not found');
-        }
+    
 
         res.status(httpStatus.OK).json(
             buildResponse(httpStatus.OK, order[0])
