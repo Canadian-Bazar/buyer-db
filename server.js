@@ -51,20 +51,7 @@ init().then((dbStatus) => {
 
 
 
-   api.use(
-  cors({
-     origin:[process.env.FRONTEND_URL, 'https://seller-canadian-bazar.duckdns.org'] ,   
-    credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
-    allowedHeaders: [
-      'Content-Type', 
-      'Authorization', 
-      'X-Requested-With',
-      'Accept',
-      'Origin'
-    ]
-  })
-);
+   
 
   api.use(bodyParser.json({ limit: '32mb' }))
   api.use(bodyParser.urlencoded({ limit: '32mb', extended: false }))
@@ -75,7 +62,9 @@ init().then((dbStatus) => {
       credentials: true,
       
       methods: 'POST, GET, PATCH, PUT, DELETE, HEAD, OPTIONS',
-      origin: [process.env.FRONTEND_URL , 'http://localhost:5173' , 'https://canadian-bazaar.ca']
+
+      origin: [process.env.FRONTEND_URL , 'https://seller.canadian-bazaar.ca' ,'https://seller-canadian-bazar.duckdns.org']
+
     }),
   )
 
