@@ -17,6 +17,14 @@ router.get(
 )
 
 
+
+router.get(
+    '/default' ,
+    buyerAddressValidator.validateGetDefaultAddress ,
+    buyerAddressController.getDefaultAddressController
+)
+
+
 router.post(
     '/' , 
     buyerAddressValidator.validateCreateAddress , 
