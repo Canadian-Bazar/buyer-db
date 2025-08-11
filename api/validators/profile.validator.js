@@ -28,7 +28,7 @@ export const validateUpdateProfile=[
         .optional()
         .isString()
         .withMessage('State must be a string')
-        .isLength({ min: 3 })
+        .isLength({ min: 2 })
         .withMessage('State must be at least 3 characters long')
         .isAlphanumeric('en-US', { ignore: ' ' })
         .withMessage('State must contain only letters and numbers')
