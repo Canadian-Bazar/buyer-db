@@ -20,8 +20,8 @@ export const validateCreateCareer = [
     check('state')
         .notEmpty().withMessage('State is required'),   
     check('postalCode')
-        .notEmpty().withMessage('Postal code is required')
-        .isPostalCode('any').withMessage('Invalid postal code format'),
+        .notEmpty().withMessage('Postal code is required') ,
+
     check('category')
         .notEmpty().withMessage('Category is required')
         .isMongoId().withMessage('Invalid category ID format'),

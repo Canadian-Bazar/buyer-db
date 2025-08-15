@@ -13,7 +13,9 @@ import addressRoutes from './buyer-address.routes.js'
 import blogRoutes from './blogs.routes.js'
 import invoiceRoutes from './invoice.routes.js'
 import orderRoutes from './orders.routes.js'
+import reviewRoutes from './review.routes.js'
 import careerRoutes from './career.routes.js'
+import claimStoreRoutes from './claim-stores.routes.js'
 
 
 const v1Routes = express.Router()
@@ -34,6 +36,10 @@ v1Routes.use('/blogs', blogRoutes)
 v1Routes.use('/invoice' , invoiceRoutes)
 v1Routes.use('/orders' ,orderRoutes)
 v1Routes.use('/career' , careerRoutes)
+v1Routes.use('/review' , reviewRoutes)
+v1Routes.use('/claim-stores' , claimStoreRoutes)
+
+
 
 router.use('/api/v1', v1Routes)
 
