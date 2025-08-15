@@ -42,6 +42,10 @@ const StoreClaimUsers = new mongoose.Schema({
         type:Boolean, 
         default:false
 
+    } ,
+    category:{
+        type: mongoose.Types.ObjectId ,
+        ref:'Category'
     }
 } , {
     collection:"StoreClaimUsers" ,
