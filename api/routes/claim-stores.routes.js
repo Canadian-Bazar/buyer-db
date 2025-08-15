@@ -15,7 +15,15 @@ storeRoutes.get(
                trimRequest.all ,
                claimStoreValidator.validateGetStores ,
                claimStoreController.getStoresController
-            )
+         )
+
+
+storeRoutes.get(
+   '/category-wise' ,
+   trimRequest.all ,
+   claimStoreValidator.validateGetCategoryWiseClaimedData ,
+   claimStoreController.getCategoryUnclaimedStoresController
+)
 
 
 
