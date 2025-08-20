@@ -252,4 +252,71 @@ export const getCategoryUnclaimedStoresController = async (req, res) => {
 
 
 
+export const getRandomStoresController = async (req, res) => {
+    try {
+        const validatedData = matchedData(req);
+
+        let limit = Math.min(parseInt(validatedData.limit, 10) || 8 , 20);
+
+    
+      
+
+        const randomStores = await StoreClaimUsers.aggregate([
+            {
+                $match: {
+                    isClaimed: false,
+                    category: { $exists: true, $ne: null, $type: "objectId" }
+                }
+            },
+            {
+                $lookup: {
+                    from: "Category",
+                    localField: "category",
+                    foreignField: "_id",
+                    as: "categoryData"
+                }
+            },
+            {
+                $match: {
+                    categoryData: { $ne: [] }
+                }
+            },
+            {
+                $addFields: {
+                    categoryName: { $arrayElemAt: ["$categoryData.name", 0] }
+                }
+            },
+            {
+                $project: {
+                    categoryData: 0
+                }
+            },
+            {
+                $addFields: {
+                    randomField: { $rand: {} }
+                }
+            },
+            {
+                $sort: { randomField: 1 }
+            },
+            {
+                $limit: limit
+            },
+            {
+                $project: {
+                    categoryName: 1,
+                    shop: "$$ROOT"
+                }
+            }
+        ]);
+
+        res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, randomStores));
+    } catch (err) {
+        handleError(res, err);
+    }
+};
+
+
+
+
 
