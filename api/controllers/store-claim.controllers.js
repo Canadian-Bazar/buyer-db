@@ -350,6 +350,7 @@ export const getRandomStoresController = async (req, res) => {
         };
 
         res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, response));
+        
     } catch (err) {
         handleError(res, err);
     }
