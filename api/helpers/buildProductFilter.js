@@ -20,6 +20,7 @@ export const buildProductFilters = (filterParams, isProductStatsQuery = false, u
   
   // Initial match conditions
   const initialMatch = {};
+  initialMatch.completionPercentage = { $eq: 100 };
   
   // Text search filter
   if (filterParams?.search) {

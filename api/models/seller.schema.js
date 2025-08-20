@@ -3,80 +3,99 @@ import aggregatePaginate from 'mongoose-aggregate-paginate-v2'
 import paginate from 'mongoose-paginate-v2'
 
 const SellerSchema = new mongoose.Schema({ 
-    companyName:{
-        type:String ,
-        required:true,
-        trim:true,
-    } ,
+    companyName: {
+          type: String,
+          required: true,
+          trim: true,
+     },
 
-   phone: {
-    type: String,
-    required: true, 
-    trim: true,
-    unique: true,
+     phone: {
+          type: String,
+          required: true,
+          trim: true,
+          unique: true,
+     },
+     email: {
+          type: String,
+          required: true,
+          trim: true,
+          unique: true,
+          lowercase: true,
+     },
 
-    } ,
-    email:{
-        type:String ,
-        required:true,
-        trim:true,
-        unique:true,
-        lowercase:true,
-    } ,
+     businessType: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'BusinessType',
+          required: false,
+     },
 
-    businessType:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'BusinessType',
-    } ,
-    businessNumber:{
+     categories: [
+          {
+                type: mongoose.Types.ObjectId ,
+                ref:'Category' ,
+                required:true
+          }
+     ],
+     businessNumber: {
+          type: String,
+          required: false,
+          trim: true,
+     },
+    
+     approvalStatus: {
+          type: String,
+          enum: ['pending' ,'submitted', 'approved', 'rejected'],
+          default: 'approved',
+     },
+     password: {
+          type: String,
+          required: true,
+          trim: true,
+     },
+   
+     logo: {
+          type: String
+     },
+
+
+     street:{
         type:String ,
-        required:true,
-        trim:true,
+        required:false
     } ,
-    workTimingsFrom:{
-        type:String , 
-    } ,
-    workTimingsTo:{
-        type:String
-    } ,
-    approvalStatus:{
-        type:String,
-        enum:['pending','approved','rejected'],
-        default:'pending',
-    } ,
-    password:{
-        type:String ,
-        required:true,
-        trim:true,
-    } ,
-    isTwoFaEnabled:{
-        type:Boolean ,
-        default:false
-    } ,
-    twoFaSecret:{
-        type:String ,
-    } ,
-    profileImage:{
-        type:String
-    }   ,
     city:{
-      type:String ,
-      required:true 
+        type:String , 
+        required:false ,
     } ,
     state:{
-      type:String ,
-      required:true 
+        type:String ,
+        required:false ,
     } ,
-    isVerified:{
-        type:Boolean ,
-        default:false ,
-        required:true
-    }
 
-  } , {
-    timestamps:true ,
-    collection:'Sellers',
-  })
+    zip:{
+        type:String ,
+        required:false ,
+    } ,
+   
+     isVerified: {
+          type: Boolean,
+          default: true,
+          required: true
+     } ,
+     isProfileComplete:{
+          type:Boolean ,
+          default:false , 
+          required:true
+     } ,
+
+     stripeCustomerId:{
+          type:String
+     }
+    
+
+}, {
+     timestamps: true,
+     collection: 'Sellers',
+})
 
   SellerSchema.plugin(paginate)
   SellerSchema.plugin(aggregatePaginate)

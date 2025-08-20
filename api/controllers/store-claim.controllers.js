@@ -252,4 +252,99 @@ export const getCategoryUnclaimedStoresController = async (req, res) => {
 
 
 
+export const getRandomStoresController = async (req, res) => {
+    try {
+        const validatedData = matchedData(req);
+
+        let limit = Math.min(parseInt(validatedData.limit, 10) || 8, 20);
+        let page = Math.max(parseInt(validatedData.page, 10) || 1, 1);
+        let skip = (page - 1) * limit;
+
+        // First get the total count of unclaimed stores
+        const totalStores = await StoreClaimUsers.countDocuments({
+            isClaimed: false,
+            category: { $exists: true, $ne: null, $type: "objectId" }
+        });
+
+        // Calculate pagination info
+        const totalPages = Math.ceil(totalStores / limit);
+        const hasNextPage = page < totalPages;
+        const hasPrevPage = page > 1;
+
+        const randomStores = await StoreClaimUsers.aggregate([
+            {
+                $match: {
+                    isClaimed: false,
+                    category: { $exists: true, $ne: null, $type: "objectId" }
+                }
+            },
+            {
+                $lookup: {
+                    from: "Category",
+                    localField: "category",
+                    foreignField: "_id",
+                    as: "categoryData"
+                }
+            },
+            {
+                $match: {
+                    categoryData: { $ne: [] }
+                }
+            },
+            {
+                $addFields: {
+                    categoryName: { $arrayElemAt: ["$categoryData.name", 0] }
+                }
+            },
+            {
+                $project: {
+                    categoryData: 0
+                }
+            },
+            {
+                $addFields: {
+                    randomField: { $rand: {} }
+                }
+            },
+            {
+                $sort: { randomField: 1 }
+            },
+            {
+                $skip: skip
+            },
+            {
+                $limit: limit
+            },
+            {
+                $project: {
+                    categoryName: 1,
+                    shop: "$$ROOT"
+                }
+            }
+        ]);
+
+        // Build response with pagination data
+        const response = {
+            data: randomStores,
+            pagination: {
+                currentPage: page,
+                totalPages: totalPages,
+                totalItems: totalStores,
+                itemsPerPage: limit,
+                hasNextPage: hasNextPage,
+                hasPrevPage: hasPrevPage,
+                nextPage: hasNextPage ? page + 1 : null,
+                prevPage: hasPrevPage ? page - 1 : null
+            }
+        };
+
+        res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, response));
+    } catch (err) {
+        handleError(res, err);
+    }
+};
+
+
+
+
 

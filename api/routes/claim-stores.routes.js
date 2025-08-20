@@ -27,5 +27,14 @@ storeRoutes.get(
 
 
 
+storeRoutes.get(
+   '/random',
+   trimRequest.all,
+   claimStoreValidator.validateGetRandomClaimedStores,
+   claimStoreController.getRandomStoresController
+);
+
+
+
 export default storeRoutes
 

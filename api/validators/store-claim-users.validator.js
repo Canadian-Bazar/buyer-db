@@ -61,3 +61,11 @@ export const validateGetStores = [
 export const validateGetCategoryWiseClaimedData = [
     (req , res , next) => validateRequest(req , res, next)
 ]
+
+
+
+export const validateGetRandomClaimedStores = [
+    ...paginationValidator ,
+    (req , res , next) => validateRequest(req , res, next)
+]
+  
