@@ -256,10 +256,20 @@ export const getRandomStoresController = async (req, res) => {
     try {
         const validatedData = matchedData(req);
 
-        let limit = Math.min(parseInt(validatedData.limit, 10) || 8 , 20);
+        let limit = Math.min(parseInt(validatedData.limit, 10) || 8, 20);
+        let page = Math.max(parseInt(validatedData.page, 10) || 1, 1);
+        let skip = (page - 1) * limit;
 
-    
-      
+        // First get the total count of unclaimed stores
+        const totalStores = await StoreClaimUsers.countDocuments({
+            isClaimed: false,
+            category: { $exists: true, $ne: null, $type: "objectId" }
+        });
+
+        // Calculate pagination info
+        const totalPages = Math.ceil(totalStores / limit);
+        const hasNextPage = page < totalPages;
+        const hasPrevPage = page > 1;
 
         const randomStores = await StoreClaimUsers.aggregate([
             {
@@ -300,6 +310,9 @@ export const getRandomStoresController = async (req, res) => {
                 $sort: { randomField: 1 }
             },
             {
+                $skip: skip
+            },
+            {
                 $limit: limit
             },
             {
@@ -310,7 +323,22 @@ export const getRandomStoresController = async (req, res) => {
             }
         ]);
 
-        res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, randomStores));
+        // Build response with pagination data
+        const response = {
+            data: randomStores,
+            pagination: {
+                currentPage: page,
+                totalPages: totalPages,
+                totalItems: totalStores,
+                itemsPerPage: limit,
+                hasNextPage: hasNextPage,
+                hasPrevPage: hasPrevPage,
+                nextPage: hasNextPage ? page + 1 : null,
+                prevPage: hasPrevPage ? page - 1 : null
+            }
+        };
+
+        res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, response));
     } catch (err) {
         handleError(res, err);
     }
