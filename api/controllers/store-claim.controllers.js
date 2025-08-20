@@ -310,7 +310,7 @@ export const getRandomStoresController = async (req, res) => {
             },
             {
                 $addFields: {
-                    category: { $arrayElemAt: ["$categoryData.name", 0] }
+                    categoryName: { $arrayElemAt: ["$categoryData.name", 0] }
                 }
             },
             {
@@ -334,8 +334,7 @@ export const getRandomStoresController = async (req, res) => {
             },
             {
                 $project: {
-                    categoryName: 1,
-                    shop: "$$ROOT"
+                    randomField: 0
                 }
             }
         ]);
