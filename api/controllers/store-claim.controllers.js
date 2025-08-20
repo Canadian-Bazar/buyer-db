@@ -325,7 +325,7 @@ export const getRandomStoresController = async (req, res) => {
 
         // Build response with pagination data
         const response = {
-            data: randomStores,
+            docs: randomStores,
             pagination: {
                 currentPage: page,
                 totalPages: totalPages,
