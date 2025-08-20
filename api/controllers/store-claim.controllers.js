@@ -260,16 +260,33 @@ export const getRandomStoresController = async (req, res) => {
         let page = Math.max(parseInt(validatedData.page, 10) || 1, 1);
         let skip = (page - 1) * limit;
 
-        // First get the total count of unclaimed stores
-        const totalStores = await StoreClaimUsers.countDocuments({
-            isClaimed: false,
-            category: { $exists: true, $ne: null, $type: "objectId" }
-        });
+        // First get the total count of unclaimed stores with category populated
+        const totalStoresCount = await StoreClaimUsers.aggregate([
+            {
+                $match: {
+                    isClaimed: false,
+                    category: { $exists: true, $ne: null, $type: "objectId" }
+                }
+            },
+            {
+                $lookup: {
+                    from: "Category",
+                    localField: "category",
+                    foreignField: "_id",
+                    as: "categoryData"
+                }
+            },
+            {
+                $match: {
+                    categoryData: { $ne: [] }
+                }
+            },
+            {
+                $count: "total"
+            }
+        ]);
 
-        // Calculate pagination info
-        const totalPages = Math.ceil(totalStores / limit);
-        const hasNextPage = page < totalPages;
-        const hasPrevPage = page > 1;
+        const totalStores = totalStoresCount[0]?.total || 0;
 
         const randomStores = await StoreClaimUsers.aggregate([
             {
@@ -317,28 +334,23 @@ export const getRandomStoresController = async (req, res) => {
             },
             {
                 $project: {
-                    categoryName: 1,
-                    shop: "$$ROOT"
+                    randomField: 0
                 }
             }
         ]);
 
-        // Build response with pagination data
+        // Build response with same format as getStoresController
         const response = {
-            data: randomStores,
-            pagination: {
-                currentPage: page,
-                totalPages: totalPages,
-                totalItems: totalStores,
-                itemsPerPage: limit,
-                hasNextPage: hasNextPage,
-                hasPrevPage: hasPrevPage,
-                nextPage: hasNextPage ? page + 1 : null,
-                prevPage: hasPrevPage ? page - 1 : null
-            }
+            docs: randomStores,
+            hasPrev: page > 1,
+            hasNext: (limit * page) < totalStores,
+            totalPages: Math.ceil(totalStores / limit),
+            currentPage: page,
+            totalDocs: totalStores
         };
 
         res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, response));
+        
     } catch (err) {
         handleError(res, err);
     }
