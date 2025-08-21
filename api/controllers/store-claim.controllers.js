@@ -61,25 +61,43 @@ export const getStoresController = async (req, res) => {
             };
         }
 
-        // Category filter with hierarchy support (ALWAYS ENABLED)
+        // Category filter with FULL hierarchy support (PARENTS + CHILDREN)
         if (validatedData.category) {
             const categoryId = validatedData.category;
             
             try {
-                // Import Category model (make sure it's imported at the top)
-                // import Category from '../models/Category.js';
-                
                 const selectedCategory = await Category.findById(categoryId);
                 
                 if (selectedCategory) {
-                    // Always create array of category IDs including the selected category and all its ancestors
+                    // Start with the selected category and its ancestors (parents)
                     const categoryIds = [
                         new mongoose.Types.ObjectId(categoryId),
                         ...selectedCategory.ancestors
                     ];
+
+                    // Find all child categories (categories that have this category in their ancestors array)
+                    const childCategories = await Category.find({
+                        ancestors: new mongoose.Types.ObjectId(categoryId)
+                    }).select('_id');
+
+                    // Add child category IDs
+                    const childCategoryIds = childCategories.map(cat => cat._id);
+                    categoryIds.push(...childCategoryIds);
+
+                    // Also find direct children (categories with this category as parentCategory)
+                    const directChildren = await Category.find({
+                        parentCategory: new mongoose.Types.ObjectId(categoryId)
+                    }).select('_id');
+
+                    const directChildIds = directChildren.map(cat => cat._id);
+                    categoryIds.push(...directChildIds);
+
+                    // Remove duplicates
+                    const uniqueCategoryIds = [...new Set(categoryIds.map(id => id.toString()))].map(id => new mongoose.Types.ObjectId(id));
                     
-                    filter.category = { $in: categoryIds };
-                    console.log("Category hierarchy filter applied:", categoryIds);
+                    filter.category = { $in: uniqueCategoryIds };
+                    console.log("Full category hierarchy filter applied:", uniqueCategoryIds);
+                    console.log("Total categories in hierarchy:", uniqueCategoryIds.length);
                 } else {
                     // If category not found, use original filter
                     filter.category = categoryId;
@@ -131,7 +149,9 @@ export const getStoresController = async (req, res) => {
             }, {
                 $addFields: {
                     categoryName: { $arrayElemAt: ["$categoryInfo.name", 0] },
-                    categorySlug: { $arrayElemAt: ["$categoryInfo.slug", 0] }
+                    categorySlug: { $arrayElemAt: ["$categoryInfo.slug", 0] },
+                    categoryParent: { $arrayElemAt: ["$categoryInfo.parentCategory", 0] },
+                    categoryAncestors: { $arrayElemAt: ["$categoryInfo.ancestors", 0] }
                 }
             }, {
                 $project: {
@@ -165,7 +185,7 @@ export const getStoresController = async (req, res) => {
             totalDocs: total,
             filters: {
                 appliedFilters: Object.keys(filter),
-                hierarchyEnabled: true, // Always enabled now
+                fullHierarchyEnabled: true, // Parents + Children enabled
                 categoryFilter: validatedData.category || null
             }
         };
