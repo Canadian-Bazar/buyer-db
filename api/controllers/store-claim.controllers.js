@@ -4,7 +4,8 @@ import buildResponse from "../utils/buildResponse.js";
 import StoreClaimUsers from '../models/store-claim-users.schema.js'
 import  { matchedData } from 'express-validator';
 import httpStatus from 'http-status';
-
+import Category from '../models/category.schema.js'
+import mongoose from 'mongoose';
 
 
 
@@ -18,8 +19,7 @@ export const getStoresController = async (req, res) => {
         // Build filter object
         const filter = {};
 
-
-        console.log("isis" , validatedData)
+        console.log("validatedData:", validatedData);
 
         // isClaimed filter logic
         if (validatedData.isClaimed !== undefined) {
@@ -53,23 +53,41 @@ export const getStoresController = async (req, res) => {
             };
         }
 
-        // Category filter (exact match)
-        if (validatedData.category) {
-            filter.category = validatedData.category;
-        }
-
-
-
-        console.log("filter" , filter)
-
-
-        // Note: You mentioned 'state' but your schema has 'province'
-        // If you want both, add this:
+        // State filter (mapping to province)
         if (validatedData.state) {
             filter.province = {
                 $regex: validatedData.state,
                 $options: 'i'
             };
+        }
+
+        // Category filter with hierarchy support (ALWAYS ENABLED)
+        if (validatedData.category) {
+            const categoryId = validatedData.category;
+            
+            try {
+                // Import Category model (make sure it's imported at the top)
+                // import Category from '../models/Category.js';
+                
+                const selectedCategory = await Category.findById(categoryId);
+                
+                if (selectedCategory) {
+                    // Always create array of category IDs including the selected category and all its ancestors
+                    const categoryIds = [
+                        new mongoose.Types.ObjectId(categoryId),
+                        ...selectedCategory.ancestors
+                    ];
+                    
+                    filter.category = { $in: categoryIds };
+                    console.log("Category hierarchy filter applied:", categoryIds);
+                } else {
+                    // If category not found, use original filter
+                    filter.category = categoryId;
+                }
+            } catch (categoryError) {
+                console.warn("Error fetching category hierarchy, falling back to exact match:", categoryError);
+                filter.category = categoryId;
+            }
         }
 
         // Search filter (existing logic)
@@ -96,13 +114,47 @@ export const getStoresController = async (req, res) => {
             ];
         }
 
+        console.log("Applied filter:", JSON.stringify(filter, null, 2));
 
-        const stores = await StoreClaimUsers
-            .find(filter)
-            .skip((page - 1) * limit)
-            .limit(limit);
+        // Build aggregation pipeline for better performance and category info
+        const aggregationPipeline = [
+            { $match: filter },
+            
+            // Lookup category information if category filter is applied
+            ...(validatedData.category ? [{
+                $lookup: {
+                    from: "Category",
+                    localField: "category",
+                    foreignField: "_id",
+                    as: "categoryInfo"
+                }
+            }, {
+                $addFields: {
+                    categoryName: { $arrayElemAt: ["$categoryInfo.name", 0] },
+                    categorySlug: { $arrayElemAt: ["$categoryInfo.slug", 0] }
+                }
+            }, {
+                $project: {
+                    categoryInfo: 0 // Remove the lookup data to keep response clean
+                }
+            }] : []),
+            
+            // Skip and limit for pagination
+            { $skip: (page - 1) * limit },
+            { $limit: limit }
+        ];
 
-        const total = await StoreClaimUsers.countDocuments(filter);
+        // Execute aggregation
+        const stores = await StoreClaimUsers.aggregate(aggregationPipeline);
+        
+        // Get total count
+        const totalAggregation = [
+            { $match: filter },
+            { $count: "total" }
+        ];
+        
+        const totalResult = await StoreClaimUsers.aggregate(totalAggregation);
+        const total = totalResult.length > 0 ? totalResult[0].total : 0;
 
         const response = {
             docs: stores,
@@ -110,7 +162,12 @@ export const getStoresController = async (req, res) => {
             hasNext: (limit * page) < total,
             totalPages: Math.ceil(total / limit),
             currentPage: page,
-            totalDocs: total
+            totalDocs: total,
+            filters: {
+                appliedFilters: Object.keys(filter),
+                hierarchyEnabled: true, // Always enabled now
+                categoryFilter: validatedData.category || null
+            }
         };
 
         res
@@ -118,9 +175,11 @@ export const getStoresController = async (req, res) => {
             .json(buildResponse(httpStatus.OK, response));
 
     } catch (err) {
+        console.error("Error in getStoresController:", err);
         handleError(res, err);
     }
 };
+
 
 
 export const getCategoryUnclaimedStoresController = async (req, res) => {
