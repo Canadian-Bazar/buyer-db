@@ -86,9 +86,7 @@ export const validateCreateQuotation = [
         .not()
         .isEmpty()
         .withMessage('Pin Code cannot be empty')
-        .isNumeric()
-        .withMessage('Pin Code must be a number')
-        .isLength({ min: 6, max: 6 })
+        .isLength({ min: 6, max: 7 })
         .withMessage('Pin Code must be 6 digits long'),
 
 

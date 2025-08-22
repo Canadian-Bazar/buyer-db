@@ -11,8 +11,8 @@ export const validateGetBlogs = [
         .withMessage('Search must be a string'),
     check('latest')
         .optional()
-        .isBoolean()
-        .withMessage('Latest must be a boolean'),
+        .isBoolean().withMessage('Latest must be a boolean')
+        .toBoolean(),
     (req, res, next) => validateRequest(req, res, next)
 ]
 
