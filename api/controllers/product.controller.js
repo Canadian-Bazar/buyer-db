@@ -193,9 +193,13 @@ export const getProductInfoController = async(req, res) => {
                 ratingsCount: 1,
                 isVerified: 1,
                 images: 1,
+                videos: 1,
+                brochure: 1,
+                attributes: 1,
                 about: 1,
                 services: 1,
                 deliveryDays: 1,
+                unitPrice: 1,
                 seller: {
                   _id: '$sellerData._id',
                   companyName: '$sellerData.companyName',
@@ -323,7 +327,10 @@ export const getProductInfoController = async(req, res) => {
           ratingsCount: { $arrayElemAt: ['$productData.ratingsCount', 0] },
           isVerified: { $arrayElemAt: ['$productData.isVerified', 0] },
           images: { $arrayElemAt: ['$productData.images', 0] },
+          videos: { $arrayElemAt: ['$productData.videos', 0] },
           about: { $arrayElemAt: ['$productData.about', 0] },
+          brochure: { $arrayElemAt: ['$productData.brochure', 0] },
+          attributes: { $arrayElemAt: ['$productData.attributes', 0] },
           services: { $arrayElemAt: ['$productData.services', 0] },
           deliveryDays: { $arrayElemAt: ['$productData.deliveryDays', 0] },
           seller: { $arrayElemAt: ['$productData.seller', 0] },
@@ -332,7 +339,8 @@ export const getProductInfoController = async(req, res) => {
           
           pricing: {
             quantityPriceTiers: { $arrayElemAt: ['$pricingData.quantityPriceTiers', 0] },
-            leadTime: { $arrayElemAt: ['$pricingData.leadTime', 0] }
+            leadTime: { $arrayElemAt: ['$pricingData.leadTime', 0] },
+            unitPrice: { $arrayElemAt: ['$productData.unitPrice', 0] }
           },
           
           moq: { 

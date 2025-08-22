@@ -22,7 +22,8 @@ const ProductDescriptionSchema = new mongoose.Schema({
     }
   }],
   images: [String],
-
+  videos: [String],
+  brochure: String,
 } , {
     timestamps:true ,
     collection:'ProductDescription'
