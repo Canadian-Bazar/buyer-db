@@ -2,7 +2,7 @@ import express from 'express'
 
 import * as claimStoreValidator from '../validators/store-claim-users.validator.js'
 import * as claimStoreController from '../controllers/store-claim.controllers.js'
-import   trimRequest  from 'trim-request';
+import trimRequest from 'trim-request';
 
 
 
@@ -11,17 +11,17 @@ const storeRoutes = express.Router()
 
 
 storeRoutes.get(
-               '/' ,
-               trimRequest.all ,
-               claimStoreValidator.validateGetStores ,
-               claimStoreController.getStoresController
-         )
+   '/',
+   trimRequest.all,
+   claimStoreValidator.validateGetStores,
+   claimStoreController.getStoresController
+)
 
 
 storeRoutes.get(
-   '/category-wise' ,
-   trimRequest.all ,
-   claimStoreValidator.validateGetCategoryWiseClaimedData ,
+   '/category-wise',
+   trimRequest.all,
+   claimStoreValidator.validateGetCategoryWiseClaimedData,
    claimStoreController.getCategoryUnclaimedStoresController
 )
 

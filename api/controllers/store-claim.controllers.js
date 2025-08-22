@@ -231,7 +231,8 @@ export const getCategoryUnclaimedStoresController = async (req, res) => {
             
             {
                 $addFields: {
-                    categoryName: { $arrayElemAt: ["$categoryData.name", 0] }
+                    categoryName: { $arrayElemAt: ["$categoryData.name", 0] },
+                    parentCategory: { $arrayElemAt: ["$categoryData.parentCategory", 0] },
                 }
             },
             
