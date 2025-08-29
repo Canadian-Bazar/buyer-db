@@ -33,7 +33,7 @@ export const getReviews = async (req, res) => {
 
         const page = validatedData.page || 1;
         const limit = Math.min(validatedData.limit || 20, 20);
-        const skip = (page - 1) * limit;
+        const skip = (page - 1) * limi1t;
 
         let sort = {};
         if (validatedData.sortByRating === 'asc' || validatedData.sortByRating === 'desc') {
