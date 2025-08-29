@@ -7,6 +7,7 @@ import categoryRoutes from './category.routes.js'
 import likeRoutes from './like.routes.js'
 import businessTypeRoutes from './business-types.routes.js'
 import quotationRoutes from './quotation.routes.js'
+import serviceQuotationRoutes from './service-quotation.routes.js'
 import profileRoutes from './profile.routes.js'
 import notificationsRoutes from './notifications.routes.js'
 import addressRoutes from './buyer-address.routes.js'
@@ -32,6 +33,7 @@ v1Routes.use('/category' , categoryRoutes)
 v1Routes.use('/like' , likeRoutes)
 v1Routes.use('/business-types' , businessTypeRoutes)
 v1Routes.use('/quotation' , quotationRoutes)
+v1Routes.use('/service-quotation' , serviceQuotationRoutes)
 v1Routes.use('/profile' , profileRoutes)
 v1Routes.use('/notifications' , notificationsRoutes)
 v1Routes.use('/address' , addressRoutes)
