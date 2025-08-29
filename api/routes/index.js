@@ -18,6 +18,7 @@ import careerRoutes from './career.routes.js'
 import claimStoreRoutes from './claim-stores.routes.js'
 import homePageRoutes from './home-page.routes.js'
 import serviceRoutes from './service.routes.js'
+import searchRoutes from './search.routes.js'
 
 
 const v1Routes = express.Router()
@@ -42,6 +43,7 @@ v1Routes.use('/review' , reviewRoutes)
 v1Routes.use('/claim-stores' , claimStoreRoutes)
 v1Routes.use('/home-page', homePageRoutes)
 v1Routes.use('/service', serviceRoutes)
+v1Routes.use('/search', searchRoutes)
 
 
 

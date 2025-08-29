@@ -3,13 +3,11 @@ import mongoose from 'mongoose'
 const ServiceSchema = new mongoose.Schema({
 
 
-  slug:{
+   slug:{
         type:String ,
-        required:true ,
-        unique:true ,
-        trim:true
+        trim:true ,
+        index:true ,
     } ,
-  
 
 
 
@@ -55,6 +53,12 @@ const ServiceSchema = new mongoose.Schema({
         customization: { type: Boolean, default: false },  
         media: { type: Boolean, default: false }           
     },
+
+    category:{
+        type:mongoose.Schema.Types.ObjectId ,
+        ref:'Category' ,
+        required:true
+    } ,
 
 
 

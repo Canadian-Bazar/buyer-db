@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import aggregatePaginate from "mongoose-aggregate-paginate-v2";
 import paginate from 'mongoose-paginate-v2'
+import { type } from "os";
 
 const ProductSchema = new mongoose.Schema({
     name: {
@@ -47,6 +48,9 @@ const ProductSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ProductDescription'
     },
+    minPrice:{
+      type:Number ,
+    } ,
     unitPrice:{
       type:Number ,
     } ,
@@ -105,6 +109,28 @@ const ProductSchema = new mongoose.Schema({
         pricing: { type: Boolean, default: false },         
         services: { type: Boolean, default: false },    
     },
+
+
+    brochure:{
+      type:String ,
+      default:null
+    } ,
+
+
+
+    isBlocked:{
+      type:Boolean ,
+      default:false ,
+      required:true
+    } ,
+
+    isArchived:{
+      type:Boolean ,
+      default:false ,
+      required:true
+    }
+
+    
 
 
 
