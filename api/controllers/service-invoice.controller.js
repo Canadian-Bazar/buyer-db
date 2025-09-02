@@ -274,7 +274,7 @@ export const rejectServiceInvoice = async (req, res) => {
             isRead: false
         };
         
-        await storeMessageInRedis(serviceChat._id, rejectionMessage);
+        await storeMessageInRedis(serviceChat._id, rejectionMessage , 'service');
 
         res.status(httpStatus.OK).json(
             buildResponse(httpStatus.OK, {
