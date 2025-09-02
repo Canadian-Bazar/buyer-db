@@ -24,10 +24,6 @@ router.get(
 )
 
 // Add feedback to service order
-router.post(
-  '/:orderId/feedback',
-  serviceOrderValidators.addServiceOrderFeedbackValidator,
-  serviceOrderControllers.addServiceOrderFeedback
-)
+
 
 export default router

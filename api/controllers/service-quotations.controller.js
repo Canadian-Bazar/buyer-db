@@ -27,6 +27,10 @@ export const createServiceQuotationController = async (req, res) => {
             throw buildErrorObject(httpStatus.BAD_REQUEST, 'Service quotation already pending for same service');
         }
 
+         if(!validatedData.deadline){
+            validatedData.deadline = null;
+        }
+
         await ServiceQuotation.create({
             ...validatedData,
             serviceId: service._id,

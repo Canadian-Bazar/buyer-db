@@ -10,19 +10,13 @@ router.use(trimRequest.all)
 
 // Get service invoice details
 router.post(
-  '/details',
+  '/',
   requireAuth,
   serviceInvoiceValidators.getServiceInvoiceDetailsValidator,
   serviceInvoiceControllers.getServiceInvoiceDetails
 )
 
-// Accept service invoice
-router.put(
-  '/accept',
-  requireAuth,
-  serviceInvoiceValidators.acceptServiceInvoiceValidator,
-  serviceInvoiceControllers.acceptServiceInvoice
-)
+
 
 // Reject service invoice
 router.put(

@@ -22,7 +22,8 @@ const ServiceQuotationSchema = new mongoose.Schema({
  
     deadline:{
         type:Date ,
-        required:true ,
+        required:false ,
+        default:null
     } ,
     description:{
         type:String ,

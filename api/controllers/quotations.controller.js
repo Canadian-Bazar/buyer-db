@@ -19,6 +19,10 @@ export const createQuotationController = async (req, res) => {
             throw buildErrorObject(httpStatus.BAD_REQUEST, 'Product Not Found');
         }
 
+        if(!validatedData.deadline){
+            validatedData.deadline = null;
+        }
+
         const existingQuotation = await Quotation.findOne({
             productId: product._id,
             buyer: req.user._id,

@@ -68,60 +68,7 @@ const ServiceOrderSchema = new mongoose.Schema({
         default: 'pending'
     },
     
-    // Service-specific fields
-    serviceType: {
-        type: String,
-        required: true
-    },
-    
-    deliveryMethod: {
-        type: String,
-        enum: ['digital', 'physical', 'consultation'],
-        default: 'digital'
-    },
-    
-    expectedDeliveryDate: {
-        type: Date
-    },
-    
-    actualDeliveryDate: {
-        type: Date
-    },
-    
-    deliveredAt: {
-        type: Date
-    },
-    
-    // Service progress tracking
-    milestones: [{
-        name: String,
-        description: String,
-        status: {
-            type: String,
-            enum: ['pending', 'in_progress', 'completed'],
-            default: 'pending'
-        },
-        completedAt: Date
-    }],
-    
-    // Service deliverables
-    deliverables: [{
-        name: String,
-        description: String,
-        fileUrl: String,
-        deliveredAt: Date
-    }],
-    
-    // Customer feedback
-    feedback: {
-        rating: {
-            type: Number,
-            min: 1,
-            max: 5
-        },
-        comment: String,
-        submittedAt: Date
-    }
+   
     
 }, { 
     timestamps: true, 

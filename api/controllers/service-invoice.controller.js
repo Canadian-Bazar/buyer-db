@@ -25,10 +25,9 @@ const createServiceOrderFromInvoice = async (serviceInvoice, buyerId, serviceCha
         serviceInvoiceId: serviceInvoice._id,
         serviceChatId: serviceChatId,
         finalPrice: serviceInvoice.totalAmount,
-        status: 'pending',
-        serviceType: 'general_service',
-        deliveryMethod: 'digital'
-    };
+        status: 'pending'
+    }
+      
 
     const orderArray = await ServiceOrders.create([orderData], { session });
     return orderArray[0];
@@ -37,15 +36,18 @@ const createServiceOrderFromInvoice = async (serviceInvoice, buyerId, serviceCha
 export const getServiceInvoiceDetails = async (req, res) => {
     try {
         const validatedData = matchedData(req);
-        const { serviceInvoiceToken } = validatedData;
+        const { invoiceToken } = validatedData;
 
-        const decoded = jwt.verify(serviceInvoiceToken, process.env.SERVICE_INVOICE_SECRET);
-        const serviceInvoiceId = decoded.serviceInvoiceId;
+
+        console.log("Token received:", invoiceToken); // Debug log
+
+        const decoded = jwt.verify(invoiceToken, process.env.INVOICE_SECRET);
+        const serviceInvoiceId = decoded.invoiceId;
 
         const serviceInvoiceDetails = await ServiceInvoice.findById(serviceInvoiceId)
             .populate({
-                path: 'serviceQuotationId',
-                select: 'title description minPrice maxPrice deadline requirements'
+                path: 'quotationId',
+                select: 'description minPrice maxPrice deadline city state province'
             })
             .populate('sellerId', 'companyName email phone logo city state');
 
@@ -92,10 +94,10 @@ export const acceptServiceInvoice = async (req, res) => {
         session.startTransaction();
         
         const validatedData = matchedData(req);
-        const { serviceInvoiceToken } = validatedData;
+        const { invoiceToken } = validatedData;
         const buyerId = req.user._id;
 
-        const decoded = jwt.verify(serviceInvoiceToken, process.env.SERVICE_INVOICE_SECRET);
+        const decoded = jwt.verify(invoiceToken, process.env.INVOICE_SECRET);
         const serviceInvoiceId = decoded.serviceInvoiceId;
 
         const serviceInvoice = await ServiceInvoice.findById(serviceInvoiceId)
@@ -202,11 +204,11 @@ export const rejectServiceInvoice = async (req, res) => {
         session.startTransaction();
         
         const validatedData = matchedData(req);
-        const { serviceInvoiceToken, rejectionReason } = validatedData;
+        const { invoiceToken, rejectionReason } = validatedData;
         const buyerId = req.user._id;
 
-        const decoded = jwt.verify(serviceInvoiceToken, process.env.SERVICE_INVOICE_SECRET);
-        const serviceInvoiceId = decoded.serviceInvoiceId;
+        const decoded = jwt.verify(invoiceToken, process.env.INVOICE_SECRET);
+        const serviceInvoiceId = decoded.invoiceId;
 
         const serviceInvoice = await ServiceInvoice.findById(serviceInvoiceId).session(session);
 
@@ -222,7 +224,7 @@ export const rejectServiceInvoice = async (req, res) => {
             throw buildErrorObject(httpStatus.CONFLICT, `Service invoice has already been ${serviceInvoice.status}`);
         }
 
-        const serviceChat = await ServiceChat.findOne({ quotation: serviceInvoice.serviceQuotationId })
+        const serviceChat = await ServiceChat.findOne({ quotation: serviceInvoice.quotationId })
             .session(session);
 
         if (!serviceChat) {

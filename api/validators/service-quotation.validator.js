@@ -3,16 +3,16 @@ import validateRequest from "../utils/validateRequest.js";
 
 export const validateCreateServiceQuotation = [
 
-    check('deadline')
-        .exists()
-        .withMessage('Deadline is required')
-        .not()
-        .isEmpty()
-        .withMessage('Deadline cannot be empty')
-        .isString()
-        .withMessage('Deadline must be a string')
-        .isDate({ format: 'YYYY-MM-DD' })
-        .withMessage('Deadline must be a valid date in YYYY-MM-DD format'),
+check('deadline')
+  .optional({ checkFalsy: true, nullable: true }) 
+  .isISO8601({ strict: true }) 
+  .withMessage('Deadline must be a valid date in YYYY-MM-DD format')
+  .custom(value => {
+    if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      throw new Error('Deadline must be in YYYY-MM-DD format');
+    }
+    return true;
+  }) ,
     check('minPrice')
         .exists()
         .withMessage('Min Price is required')

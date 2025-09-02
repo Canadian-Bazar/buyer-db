@@ -16,7 +16,7 @@ async function updateUserChatOrder(userId, chatId, messageTimestamp) {
 // MODIFIED: Your existing storeMessageInRedis function
 async function storeMessageInRedis(chatId, message) {
    try {
-       await redisClient.rPush(`MESSAGEQUEUE:${chatId}`, JSON.stringify(message));
+       await redisClient.rpush(`MESSAGEQUEUE:${chatId}`, JSON.stringify(message));
        
        // NEW: Update chat order for both users
        const chat = await Chat.findById(chatId).select('buyer seller').lean();

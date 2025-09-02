@@ -2,7 +2,7 @@ import { check } from 'express-validator';
 import validateRequest from '../utils/validateRequest.js';
 
 export const getServiceInvoiceDetailsValidator = [
-  check('serviceInvoiceToken')
+  check('invoiceToken')
     .exists()
     .withMessage('Service invoice token is required')
     .not()
@@ -15,7 +15,7 @@ export const getServiceInvoiceDetailsValidator = [
 ];
 
 export const acceptServiceInvoiceValidator = [
-  check('serviceInvoiceToken')
+  check('invoiceToken')
     .exists()
     .withMessage('Service invoice token is required')
     .not()
@@ -28,7 +28,7 @@ export const acceptServiceInvoiceValidator = [
 ];
 
 export const rejectServiceInvoiceValidator = [
-  check('serviceInvoiceToken')
+  check('invoiceToken')
     .exists()
     .withMessage('Service invoice token is required')
     .not()

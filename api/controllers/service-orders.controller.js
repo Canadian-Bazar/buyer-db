@@ -31,7 +31,7 @@ export const getServiceOrders = async (req, res) => {
             },
             {
                 $match: {
-                    'serviceQuotation.buyerId': new mongoose.Types.ObjectId(buyerId)
+                    'serviceQuotation.buyer': new mongoose.Types.ObjectId(buyerId)
                 }
             }
         ];
@@ -44,7 +44,7 @@ export const getServiceOrders = async (req, res) => {
             {
                 $lookup: {
                     from: 'Sellers',
-                    localField: 'serviceQuotation.sellerId',
+                    localField: 'serviceQuotation.seller',
                     foreignField: '_id',
                     as: 'seller'
                 }
@@ -74,11 +74,7 @@ export const getServiceOrders = async (req, res) => {
                     orderId: 1,
                     status: 1,
                     finalPrice: 1,
-                    serviceType: 1,
-                    deliveryMethod: 1,
-                    expectedDeliveryDate: 1,
-                    actualDeliveryDate: 1,
-                    deliveredAt: 1,
+                   
                     createdAt: 1,
                     'seller.fullName': 1,
                     'seller.companyName': 1,
@@ -93,6 +89,8 @@ export const getServiceOrders = async (req, res) => {
             { $skip: skip },
             { $limit: effectiveLimit }
         );
+
+        console.log('Aggregation Pipeline:', JSON.stringify(pipeline, null, 2));
 
         const orders = await ServiceOrders.aggregate(pipeline);
 
@@ -111,7 +109,7 @@ export const getServiceOrders = async (req, res) => {
             },
             {
                 $match: {
-                    'serviceQuotation.buyerId': new mongoose.Types.ObjectId(buyerId)
+                    'serviceQuotation.buyer': new mongoose.Types.ObjectId(buyerId)
                 }
             }
         ];
@@ -194,13 +192,13 @@ export const getServiceOrderById = async (req, res) => {
             },
             {
                 $match: {
-                    'serviceQuotation.buyerId': new mongoose.Types.ObjectId(buyerId)
+                    'serviceQuotation.buyer': new mongoose.Types.ObjectId(buyerId)
                 }
             },
             {
                 $lookup: {
                     from: 'Sellers',
-                    localField: 'serviceQuotation.sellerId',
+                    localField: 'serviceQuotation.seller',
                     foreignField: '_id',
                     as: 'seller'
                 }
@@ -235,10 +233,7 @@ export const getServiceOrderById = async (req, res) => {
                     orderId: 1,
                     status: 1,
                     finalPrice: 1,
-                    serviceType: 1,
-                    deliveryMethod: 1,
-                    expectedDeliveryDate: 1,
-                    actualDeliveryDate: 1,
+                
                     deliveredAt: 1,
                     milestones: 1,
                     deliverables: 1,
