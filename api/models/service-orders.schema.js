@@ -56,18 +56,33 @@ const ServiceOrderSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: [
-            'pending',
+            'pending', 
             'confirmed', 
-            'in_progress',
-            'review_ready',
-            'revision_requested',
-            'completed',
-            'delivered',
-            'cancelled'
+            'processing', 
+            'ready_to_ship', 
+            'shipped', 
+            'in_transit', 
+            'out_for_delivery', 
+            'delivered', 
+            'cancelled', 
+            'returned'
         ],
         default: 'pending'
     },
     
+    trackingNumber: {
+        type: String
+    },
+    
+    estimatedDeliveryDate: {
+        type: Date
+    },
+    
+    deliveredAt: {
+        type: Date
+    },
+    
+    // Service-specific fields
    
     
 }, { 
