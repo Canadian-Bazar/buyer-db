@@ -118,14 +118,14 @@ init().then((dbStatus) => {
 })
 
 
-redisClient.ping()
-                 .then(()=>{
+// redisClient.ping()
+//                  .then(()=>{
 
-                  console.log('Redis connected')
+//                   console.log('Redis connected')
 
-                  scheduleAnalyticsCronJobs()
+//                   scheduleAnalyticsCronJobs()
 
-                 })
+//                  })
 
 
 // For testing
