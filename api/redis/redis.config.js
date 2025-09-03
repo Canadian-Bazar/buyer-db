@@ -1,8 +1,8 @@
 import Redis from 'ioredis'
 
 const redisConfig ={
-    host:process.env.REDIS_HOST ,
-    port:process.env.REDIS_PORT ,
+    host:process.env.REDIS_HOST || 'localhost' ,
+    port:process.env.REDIS_PORT || 6379 ,
    
     connectTimeout: 10000,
     retryStrategy: (times) => {
@@ -11,6 +11,9 @@ const redisConfig ={
     }
 
 }
+
+
+console.log("reds" , redisConfig)
 
 
 export const redisClient = new Redis(redisConfig)
@@ -22,16 +25,20 @@ export const REDIS_KEYS={
   USER_CATEGORY_INTERACTION: 'user:category:',
   PROCESSING_LOCK: 'analytics:processing:lock' ,
   PRODUCT_ACTIVITY: 'product:activity:',
-  LIKE_BATCH:'product:like:'
+  LIKE_BATCH:'product:like:',
+  SERVICE_LIKE_BATCH:'service:like:'
 
 };
 
 
 redisClient.on('connect', () => {
-  });
-  
-  redisClient.on('error', (err) => {
-  });
+  console.log('Redis connection established');
+});
+
+redisClient.on('error', (err) => {
+  console.error('Redis connection error:', err);
+});
+
   
   export default {
     redisClient,

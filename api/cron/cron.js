@@ -4,6 +4,7 @@ import categoryBatchService from '../batches/category.batch.js';
 import categoryInteractionBatchService from '../batches/category-interaction.batch.js';
 import productBatch from '../batches/product.batch.js';
 import likeBatch from '../batches/like.batch.js';
+import serviceLikeBatch from '../batches/service-like.batch.js';
 import { 
   processPerformanceAnalytics, 
   cleanupPerformanceAnalytics 
@@ -108,6 +109,17 @@ export function scheduleAnalyticsCronJobs() {
     }, 15 * 1000
   );
 
+  // Process batch service likes every 15 seconds
+  setInterval(
+    async () => {
+      try {
+        await serviceLikeBatch.processBatchServiceLikes();
+      } catch (err) {
+        console.error('Error in processing service like interactions', err);
+      }
+    }, 15 * 1000
+  );
+
   // =========================================================================
   // NEW PERFORMANCE ANALYTICS BATCH JOBS
   // =========================================================================
@@ -194,6 +206,7 @@ export function scheduleAnalyticsCronJobs() {
   console.log('✅ All analytics cron jobs scheduled successfully');
   console.log('📋 Active jobs:');
   console.log('   - Like batch processing: Every 15 seconds');
+  console.log('   - Service like batch processing: Every 15 seconds');
   console.log('   - Product activity processing: Every 5 minutes');
   console.log('   - Performance analytics processing: Every 15 minutes');
   console.log('   - Comprehensive analytics processing: Every hour');
