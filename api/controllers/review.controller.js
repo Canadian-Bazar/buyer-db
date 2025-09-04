@@ -51,7 +51,7 @@ export const getReviews = async (req, res) => {
 
 
         const docs = await Review.find(query)
-            .populate('buyer', 'name email profilePic avatar')
+            .populate('buyer', 'fullName email profilePic avatar')
             .sort(sort)
             .skip(skip)
             .limit(limit)
