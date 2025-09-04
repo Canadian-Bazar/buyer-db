@@ -20,6 +20,11 @@ import claimStoreRoutes from './claim-stores.routes.js'
 import homePageRoutes from './home-page.routes.js'
 import serviceRoutes from './service.routes.js'
 import searchRoutes from './search.routes.js'
+import sellerRoutes from './seller.routes.js'
+import serviceOrderRoutes from './service-orders.routes.js'
+import serviceInvoiceRoutes from './service-invoice.routes.js'
+import serviceLikes from './service-like.routes.js'
+import serviceReviewRoutes from './service-reviews.routes.js'
 
 
 const v1Routes = express.Router()
@@ -46,6 +51,13 @@ v1Routes.use('/claim-stores' , claimStoreRoutes)
 v1Routes.use('/home-page', homePageRoutes)
 v1Routes.use('/service', serviceRoutes)
 v1Routes.use('/search', searchRoutes)
+v1Routes.use('/seller', sellerRoutes)
+v1Routes.use('/service-orders', serviceOrderRoutes)
+v1Routes.use('/service-invoice', serviceInvoiceRoutes)
+v1Routes.use('/service-like', serviceLikes)
+v1Routes.use('/service-review', serviceReviewRoutes)
+
+
 
 
 

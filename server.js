@@ -127,6 +127,9 @@ init().then((dbStatus) => {
 
 // redisClient.ping()
 //                  .then(()=>{
+
+//                   console.log('Redis connected')
+
 //                   scheduleAnalyticsCronJobs()
 
 //                  })

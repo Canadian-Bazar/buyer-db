@@ -33,7 +33,7 @@ export const getReviews = async (req, res) => {
 
         const page = validatedData.page || 1;
         const limit = Math.min(validatedData.limit || 20, 20);
-        const skip = (page - 1) * limi1t;
+        const skip = (page - 1) * limit;
 
         let sort = {};
         if (validatedData.sortByRating === 'asc' || validatedData.sortByRating === 'desc') {
@@ -51,7 +51,7 @@ export const getReviews = async (req, res) => {
 
 
         const docs = await Review.find(query)
-            .populate('buyer', 'name email profilePic avatar')
+            .populate('buyer', 'fullName email profilePic avatar')
             .sort(sort)
             .skip(skip)
             .limit(limit)
