@@ -49,7 +49,7 @@ export const getServiceReviews = async (req, res) => {
 
 
         const docs = await ServiceReview.find(query)
-            .populate('buyer', 'name email profilePic avatar')
+            .populate('buyer', 'fullName email profilePic avatar')
             .sort(sort)
             .skip(skip)
             .limit(limit)
