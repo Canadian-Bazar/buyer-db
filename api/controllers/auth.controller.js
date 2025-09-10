@@ -25,6 +25,7 @@ import getCookieOptions from '../utils/getCookieOptions.js'
  * Controller: signupController
  * Description: Handles user registration by creating a new user in the database.
  * 
+ * 
  * Request:
  *  - email: User's email in plain text
  *  - password: User's password in plain text
