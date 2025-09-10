@@ -66,3 +66,12 @@ export const validateDeleteReview = [
 
 ];
 
+export const validateRecalculateRatings = [
+    param('productId')
+        .optional()
+        .isMongoId()
+        .withMessage('Invalid Product ID'),
+
+    (req, res, next) => validateRequest(req, res, next)
+];
+

@@ -11,7 +11,8 @@ export const getSellerProfileController = async (req, res) => {
         const { sellerId } = validatedData
 
         const seller = await Seller.findById(sellerId)
-            .select('-password -phone -email -businessNumber -stripeCustomerId -createdAt -updatedAt -__v')
+            // Exclude only sensitive/internal fields; return contact/registration & timestamps for profile modal
+            .select('-password -stripeCustomerId -__v')
             .populate('categories businessType')
             .lean()
 

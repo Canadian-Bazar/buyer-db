@@ -34,6 +34,13 @@ router.delete(
 
 )
 
+router.patch(
+    '/recalculate-ratings/:productId?' ,
+    requireAuth ,
+    reviewValidator.validateRecalculateRatings ,
+    reviewController.recalculateProductRatings
+)
+
 
 
 export default router

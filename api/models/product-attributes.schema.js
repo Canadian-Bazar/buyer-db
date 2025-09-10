@@ -27,6 +27,9 @@ const ProductAttributesSchema = new mongoose.Schema({
 
 
 
+} ,{
+  collection:'ProductAttributes' ,
+  timestamps:true
 })
 
 

@@ -63,8 +63,7 @@ init().then((dbStatus) => {
       
       methods: 'POST, GET, PATCH, PUT, DELETE, HEAD, OPTIONS',
 
-      origin: [process.env.FRONTEND_URL , 'https://seller.canadian-bazaar.ca' ,'https://seller-canadian-bazar.duckdns.org']
-
+      origin: [process.env.FRONTEND_URL , 'http://localhost:5173' , 'https://canadian-bazaar.ca', ' http://192.168.29.187:5173'  ]
     }),
   )
 
