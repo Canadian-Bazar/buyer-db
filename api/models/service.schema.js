@@ -26,6 +26,17 @@ const ServiceSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    avgRating: {
+        type: Number, 
+        default: 0.0,
+        min: 0,
+        max: 5
+    },
+    ratingsCount: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
 
     isComplete: { 
         type: Boolean, 

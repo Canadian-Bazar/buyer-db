@@ -34,6 +34,13 @@ router.delete(
 
 )
 
+router.patch(
+    '/recalculate-ratings/:serviceId?' ,
+    requireAuth ,
+    serviceReviewValidator.validateRecalculateServiceRatings ,
+    serviceReviewController.recalculateServiceRatings
+)
+
 
 
 export default router

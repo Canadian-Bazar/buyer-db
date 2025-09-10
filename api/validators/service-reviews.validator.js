@@ -65,3 +65,12 @@ export const validateDeleteServiceReview = [
             (re , res , next) => validateRequest(re , res , next)
 
 ];
+
+export const validateRecalculateServiceRatings = [
+    param('serviceId')
+        .optional()
+        .isMongoId()
+        .withMessage('Invalid Service ID'),
+
+    (req, res, next) => validateRequest(req, res, next)
+];
