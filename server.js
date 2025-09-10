@@ -58,7 +58,7 @@ init().then((dbStatus) => {
       credentials: true,
       
       methods: 'POST, GET, PATCH, PUT, DELETE, HEAD, OPTIONS',
-      origin: [process.env.FRONTEND_URL , 'http://localhost:5173' , 'https://canadian-bazaar.ca']
+      origin: [process.env.FRONTEND_URL , 'http://localhost:5173' , 'https://canadian-bazaar.ca', ' http://192.168.29.187:5173'  ]
     }),
   )
 
