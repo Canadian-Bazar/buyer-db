@@ -11,17 +11,17 @@ const ProductVariationSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  variations: [{
-    field: {
-      type: String,
-      required: true
-    },
-    values: [String]
-  }],
+  // variations: [{
+  //   field: {
+  //     type: String,
+  //     required: true
+  //   },
+  //   values: [String]
+  // }],
   customizableOptions: [
     {
       option: String,
-      quantity: Number
+      quantity: String
     }
   ]
   // variantCombinations: [{

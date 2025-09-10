@@ -95,8 +95,8 @@ export const getProductsController = async (req, res) => {
         ratingsCount: 1,
         isVerified: 1,
         images: 1,
-        minPrice: '$calculatedMinPrice',
-        maxPrice: '$calculatedMaxPrice',
+        minPrice: 1,
+        maxPrice: 1,
         moq: 1,
         isLiked: 1,
         productIdString: 1,
@@ -200,6 +200,9 @@ export const getProductInfoController = async(req, res) => {
                 services: 1,
                 deliveryDays: 1,
                 unitPrice: 1,
+                minPrice: 1,
+                maxPrice: 1,
+                moq: 1,
                 seller: {
                   _id: '$sellerData._id',
                   companyName: '$sellerData.companyName',
@@ -343,22 +346,9 @@ export const getProductInfoController = async(req, res) => {
             unitPrice: { $arrayElemAt: ['$productData.unitPrice', 0] }
           },
           
-          moq: { 
-            $ifNull: [
-              { 
-                $arrayElemAt: [
-                  { 
-                    $arrayElemAt: [
-                      '$pricingData.quantityPriceTiers', 
-                      0
-                    ] 
-                  }, 
-                  0
-                ]
-              }.min, 
-              1
-            ] 
-          },
+          moq: { $arrayElemAt: ['$productData.moq', 0] },
+          minPrice: { $arrayElemAt: ['$productData.minPrice', 0] },
+          maxPrice: { $arrayElemAt: ['$productData.maxPrice', 0] },
           
           variations: { $arrayElemAt: ['$variationsData.variations', 0] },
           

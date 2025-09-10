@@ -59,8 +59,7 @@ const ProductSchema = new mongoose.Schema({
     } ,
     moq:{
       type:Number ,
-      required:true ,
-      default:1
+      default:null
     } ,
     categoryId:{
       type:mongoose.Types.ObjectId ,

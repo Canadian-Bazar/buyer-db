@@ -19,15 +19,26 @@ export const validateCreateCNCQuote = [
     .not()
     .isEmpty()
     .withMessage('Contact cannot be empty')
-    .custom((value) => {
+    .custom((value, { req }) => {
       // Check if it's a valid email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      // Check if it's a valid Canadian phone number (both formats: 5551234567 or (555) 123-4567)
-      const phoneRegex = /^(\(\d{3}\)\s\d{3}-\d{4}|\d{10})$/
       
-      if (!emailRegex.test(value) && !phoneRegex.test(value)) {
-        throw new Error('Contact must be a valid email or Canadian phone number (e.g., 5551234567 or (555) 123-4567)')
+      if (emailRegex.test(value)) {
+        return true
       }
+      
+      // Normalize phone number by removing spaces, parentheses, dashes, and plus signs
+      const normalizedPhone = value.replace(/[\s\(\)\-\+]/g, '')
+      
+      // Check if it's a valid 10-digit number (Canadian format)
+      const phoneRegex = /^\d{10}$/
+      
+      if (!phoneRegex.test(normalizedPhone)) {
+        throw new Error('Contact must be a valid email or Canadian phone number')
+      }
+      
+      // Store the normalized phone number back in the request
+      req.body.contact = normalizedPhone
       return true
     }),
 
