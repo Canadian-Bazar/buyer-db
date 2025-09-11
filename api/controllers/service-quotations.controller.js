@@ -4,7 +4,8 @@ import buildResponse from '../utils/buildResponse.js'
 import handleError from '../utils/handleError.js'
 import  httpStatus  from 'http-status';
 import Service from '../models/service.schema.js'
-import buildErrorObject from '../utils/buildErrorObject.js';
+import buildErrorObject from '../utils/buildErrorObject.js'
+import { publishQuotationSentEvent } from '../redis/quotation-analytics.redis.js'
 
 export const createServiceQuotationController = async (req, res) => {
     try {
@@ -31,11 +32,20 @@ export const createServiceQuotationController = async (req, res) => {
             validatedData.deadline = null;
         }
 
-        await ServiceQuotation.create({
+        const newServiceQuotation = await ServiceQuotation.create({
             ...validatedData,
             serviceId: service._id,
             buyer: req.user._id,
             seller: service.seller,
+        });
+
+        // 📤 Publish service quotation sent event to seller-db analytics  
+        await publishQuotationSentEvent({
+            quotationId: newServiceQuotation._id,
+            serviceId: service._id,
+            sellerId: service.seller,
+            buyerId: req.user._id,
+            isService: true
         });
 
         res.status(httpStatus.CREATED).json(

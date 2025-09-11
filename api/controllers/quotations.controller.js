@@ -4,7 +4,8 @@ import buildResponse from '../utils/buildResponse.js'
 import handleError from '../utils/handleError.js'
 import  httpStatus  from 'http-status';
 import Product from '../models/products.schema.js'
-import buildErrorObject from '../utils/buildErrorObject.js';
+import buildErrorObject from '../utils/buildErrorObject.js'
+import { publishQuotationSentEvent } from '../redis/quotation-analytics.redis.js'
 
 
 
@@ -33,11 +34,20 @@ export const createQuotationController = async (req, res) => {
             throw buildErrorObject(httpStatus.BAD_REQUEST, 'Quotation already pending for same product');
         }
 
-        await Quotation.create({
+        const newQuotation = await Quotation.create({
             ...validatedData,
             productId: product._id,
             buyer: req.user._id,
             seller: product.seller,
+        });
+
+        // 📤 Publish quotation sent event to seller-db analytics
+        await publishQuotationSentEvent({
+            quotationId: newQuotation._id,
+            productId: product._id,
+            sellerId: product.seller,
+            buyerId: req.user._id,
+            isService: false
         });
 
         res.status(httpStatus.CREATED).json(
