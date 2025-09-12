@@ -29,6 +29,7 @@
     "connect-mongodb-session": "^5.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "country-state-city": "^3.2.1",
     "cross-env": "^7.0.3",
     "crypto": "^1.0.1",
     "dotenv": "^16.4.7",

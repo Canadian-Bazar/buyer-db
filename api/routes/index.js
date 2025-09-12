@@ -26,7 +26,7 @@ import serviceInvoiceRoutes from './service-invoice.routes.js'
 import serviceLikes from './service-like.routes.js'
 import serviceReviewRoutes from './service-reviews.routes.js'
 import cncQuotesRoutes from './cnc-quotes.routes.js'
-
+import locationRoutes from './location.routes.js'
 
 const v1Routes = express.Router()
 const router = express.Router()
@@ -58,6 +58,7 @@ v1Routes.use('/service-invoice', serviceInvoiceRoutes)
 v1Routes.use('/service-like', serviceLikes)
 v1Routes.use('/service-review', serviceReviewRoutes)
 v1Routes.use('/cnc-quotes', cncQuotesRoutes)
+v1Routes.use('/locations', locationRoutes)
 
 
 
