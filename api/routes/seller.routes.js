@@ -12,4 +12,11 @@ router.get(
     sellerControllers.getSellerProfileController
 )
 
+router.get(
+    '/',
+    trimRequest.all,
+    sellerValidator.validateListSellers,
+    sellerControllers.listSellersController
+)
+
 export default router
