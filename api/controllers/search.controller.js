@@ -44,35 +44,37 @@ export const unifiedSearchController = async (req, res) => {
             from: 'Category',
             localField: 'categoryId',
             foreignField: '_id',
-            as: 'category'
+            as: 'categoryArr'
           }
         },
+        { $addFields: { categoryDoc: { $arrayElemAt: ['$categoryArr', 0] } } },
         {
           $addFields: {
-            categoryDoc: { $arrayElemAt: ['$category', 0] }
-          }
-        },
-        {
-          $lookup: {
-            from: 'Category',
-            localField: 'categoryDoc.parentCategory',
-            foreignField: '_id',
-            as: 'parentCategory'
-          }
-        },
-        {
-          $project: {
-            _id: 1,
-            name: 1,
-            type: { $literal: 'product' },
-            category: '$categoryDoc._id',
-            parentCategory: {
+            parentCategoryId: {
               $cond: {
                 if: { $gt: [{ $size: { $ifNull: ['$categoryDoc.ancestors', []] } }, 0] },
                 then: { $arrayElemAt: ['$categoryDoc.ancestors', 0] },
                 else: '$categoryDoc.parentCategory'
               }
             }
+          }
+        },
+        {
+          $lookup: {
+            from: 'Category',
+            localField: 'parentCategoryId',
+            foreignField: '_id',
+            as: 'parentCategoryDocArr'
+          }
+        },
+        { $addFields: { parentCategoryDoc: { $arrayElemAt: ['$parentCategoryDocArr', 0] } } },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            type: { $literal: 'product' },
+            images: { $ifNull: ['$images', []] },
+            parentCategory: '$parentCategoryDoc.slug'
           }
         }
       ];
@@ -96,29 +98,13 @@ export const unifiedSearchController = async (req, res) => {
             from: 'Category',
             localField: 'category',
             foreignField: '_id',
-            as: 'categoryDoc'
+            as: 'categoryArr'
           }
         },
+        { $addFields: { categoryInfo: { $arrayElemAt: ['$categoryArr', 0] } } },
         {
           $addFields: {
-            categoryInfo: { $arrayElemAt: ['$categoryDoc', 0] }
-          }
-        },
-        {
-          $lookup: {
-            from: 'Category',
-            localField: 'categoryInfo.parentCategory',
-            foreignField: '_id',
-            as: 'parentCategory'
-          }
-        },
-        {
-          $project: {
-            _id: 1,
-            name: 1,
-            type: { $literal: 'service' },
-            category: '$categoryInfo._id',
-            parentCategory: {
+            parentCategoryId: {
               $cond: {
                 if: { $gt: [{ $size: { $ifNull: ['$categoryInfo.ancestors', []] } }, 0] },
                 then: { $arrayElemAt: ['$categoryInfo.ancestors', 0] },
@@ -126,11 +112,110 @@ export const unifiedSearchController = async (req, res) => {
               }
             }
           }
+        },
+        {
+          $lookup: {
+            from: 'Category',
+            localField: 'parentCategoryId',
+            foreignField: '_id',
+            as: 'parentCategoryDocArr'
+          }
+        },
+        { $addFields: { parentCategoryDoc: { $arrayElemAt: ['$parentCategoryDocArr', 0] } } },
+        {
+          $lookup: {
+            from: 'ServiceMedia',
+            localField: '_id',
+            foreignField: 'serviceId',
+            as: 'media'
+          }
+        },
+        {
+          $unwind: {
+            path: '$media',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            type: { $literal: 'service' },
+            images: {
+              $ifNull: [
+                { $slice: ['$media.images', 1] },
+                []
+              ]
+            },
+            parentCategory: '$parentCategoryDoc.slug'
+          }
         }
       ];
 
       const services = await Service.aggregate(servicePipeline);
       results = [...results, ...services];
+    }
+
+    if (filter === 'all' || filter === 'sellers') {
+      // Sellers: search by companyName
+      const sellerPipeline = [
+        {
+          $match: searchQuery
+            ? { companyName: { $regex: `^${searchQuery}`, $options: 'i' } }
+            : {},
+        },
+        {
+          $lookup: {
+            from: 'Category',
+            localField: 'categories',
+            foreignField: '_id',
+            as: 'categoryDocs',
+          },
+        },
+        {
+          $addFields: {
+            firstCategory: { $arrayElemAt: ['$categoryDocs', 0] },
+          },
+        },
+        {
+          $addFields: {
+            parentCategoryId: {
+              $cond: {
+                if: { $gt: [{ $size: { $ifNull: ['$firstCategory.ancestors', []] } }, 0] },
+                then: { $arrayElemAt: ['$firstCategory.ancestors', 0] },
+                else: '$firstCategory.parentCategory'
+              }
+            }
+          }
+        },
+        {
+          $lookup: {
+            from: 'Category',
+            localField: 'parentCategoryId',
+            foreignField: '_id',
+            as: 'parentCategoryDocArr'
+          }
+        },
+        { $addFields: { parentCategoryDoc: { $arrayElemAt: ['$parentCategoryDocArr', 0] } } },
+        {
+          $project: {
+            _id: 1,
+            name: '$companyName',
+            type: { $literal: 'seller' },
+            images: {
+              $cond: [
+                { $ifNull: ['$logo', false] },
+                [{ $ifNull: ['$logo', null] }],
+                [],
+              ],
+            },
+            parentCategory: '$parentCategoryDoc.slug'
+          },
+        },
+      ];
+
+      const sellers = await Seller.aggregate(sellerPipeline);
+      results = [...results, ...sellers];
     }
 
     // Apply pagination
