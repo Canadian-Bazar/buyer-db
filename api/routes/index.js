@@ -24,6 +24,7 @@ import sellerRoutes from './seller.routes.js'
 import serviceOrderRoutes from './service-orders.routes.js'
 import serviceInvoiceRoutes from './service-invoice.routes.js'
 import serviceLikes from './service-like.routes.js'
+import internalRoutes from './internal.routes.js'
 import serviceReviewRoutes from './service-reviews.routes.js'
 import cncQuotesRoutes from './cnc-quotes.routes.js'
 import locationRoutes from './location.routes.js'
@@ -59,6 +60,7 @@ v1Routes.use('/service-like', serviceLikes)
 v1Routes.use('/service-review', serviceReviewRoutes)
 v1Routes.use('/cnc-quotes', cncQuotesRoutes)
 v1Routes.use('/locations', locationRoutes)
+v1Routes.use('/internal', internalRoutes)
 
 
 
