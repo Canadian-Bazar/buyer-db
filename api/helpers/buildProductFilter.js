@@ -21,6 +21,15 @@ export const buildProductFilters = (filterParams, isProductStatsQuery = false, u
   // Initial match conditions
   const initialMatch = {};
   initialMatch.completionPercentage = { $eq: 100 };
+  // Always exclude blocked/archived and default to active items
+  initialMatch[`${prefix}isBlocked`] = false;
+  initialMatch[`${prefix}isArchived`] = false;
+  if (filterParams?.isActive !== undefined) {
+    const isActiveValue = (filterParams.isActive === 'true' || filterParams.isActive === true);
+    initialMatch[`${prefix}isActive`] = isActiveValue;
+  } else {
+    initialMatch[`${prefix}isActive`] = true;
+  }
   
   // Text search filter
   if (filterParams?.search) {

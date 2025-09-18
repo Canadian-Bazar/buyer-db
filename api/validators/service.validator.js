@@ -35,6 +35,11 @@ export const validateGetServices = [
     .optional()
     .isBoolean()
     .withMessage('Is Verified should be Boolean'),
+
+  query('isActive')
+    .optional()
+    .isBoolean()
+    .withMessage('isActive should be Boolean'),
   
   (req, res, next) => validateRequest(req, res, next)
 ];

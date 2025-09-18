@@ -23,8 +23,9 @@ export const getServicesController = async (req, res) => {
 
     const matchStage = {
       isBlocked: false,
-      isArchived: false ,
-      completionPercentage: 100
+      isArchived: false,
+      completionPercentage: 100,
+      isActive: true
     };
 
 
@@ -227,8 +228,9 @@ export const getServiceDetailsController = async (req, res) => {
 
     const matchQuery = {
       isBlocked: false,
-      isArchived: false ,
-      completionPercentage: 100
+      isArchived: false,
+      completionPercentage: 100,
+      isActive: true
     };
 
     if (isObjectId) {

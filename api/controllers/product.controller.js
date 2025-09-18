@@ -156,7 +156,9 @@ export const getProductInfoController = async(req, res) => {
       {
         $match: {
           slug: slug,
-          // isActive: true
+          isBlocked: false,
+          isArchived: false,
+          isActive: true
         }
       },
       

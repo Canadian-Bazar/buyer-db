@@ -36,7 +36,8 @@ export const unifiedSearchController = async (req, res) => {
             ...searchConditions,
             completionPercentage: 100,
             isBlocked: false,
-            isArchived: false
+            isArchived: false,
+            isActive: true
           }
         },
         {
@@ -90,7 +91,8 @@ export const unifiedSearchController = async (req, res) => {
             ...searchConditions,
             completionPercentage: 100,
             isBlocked: false,
-            isArchived: false
+            isArchived: false,
+            isActive: true
           }
         },
         {
