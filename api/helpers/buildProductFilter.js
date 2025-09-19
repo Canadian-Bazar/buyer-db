@@ -23,14 +23,25 @@ import mongoose from 'mongoose';
   // Relax completion filter to include all products regardless of completion percentage
   // If strict completeness is needed, gate it behind an explicit flag in filterParams
   // initialMatch.completionPercentage = { $eq: 100 };
-  // Always exclude blocked/archived and default to active items
-  initialMatch[`${prefix}isBlocked`] = false;
-  initialMatch[`${prefix}isArchived`] = false;
+  // Always exclude blocked/archived: treat missing fields as allowed (only exclude when true)
+  initialMatch[`${prefix}isBlocked`] = { $ne: true };
+  initialMatch[`${prefix}isArchived`] = { $ne: true };
   if (filterParams?.isActive !== undefined) {
     const isActiveValue = (filterParams.isActive === 'true' || filterParams.isActive === true);
-    initialMatch[`${prefix}isActive`] = isActiveValue;
-  } else {
-    initialMatch[`${prefix}isActive`] = true;
+    if (isActiveValue) {
+      // Treat missing isActive as active; hide only explicit false
+      stages.push({
+        $match: {
+          $or: [
+            { [`${prefix}isActive`]: true },
+            { [`${prefix}isActive`]: { $exists: false } }
+          ]
+        }
+      });
+    } else {
+      // Explicit inactive only
+      initialMatch[`${prefix}isActive`] = false;
+    }
   }
   
   // Text search filter

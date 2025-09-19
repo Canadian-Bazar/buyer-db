@@ -53,8 +53,7 @@ export const getProductsController = async (req, res) => {
         ...childIds
       ];
     }
-    const matchStage = {
-    };
+    const matchStage = {};
     const pipeline = [
       {
         $lookup: {
@@ -78,7 +77,7 @@ export const getProductsController = async (req, res) => {
           as: 'sellerData'
         }
       },
-      { $unwind: '$sellerData' }
+      { $unwind: { path: '$sellerData', preserveNullAndEmptyArrays: true } }
     ];
     
     const filterStages = await buildProductFilters(validatedData, false, userId, true, matchStage);
@@ -114,7 +113,7 @@ export const getProductsController = async (req, res) => {
       }
     });
     
-    const countPipeline = [...pipeline.filter(stage => !stage.$skip && !stage.$limit && !stage.$project)];
+    const countPipeline = pipeline.filter(stage => !stage.$skip && !stage.$limit && !stage.$project && !stage.$sort);
     countPipeline.push({ $count: 'totalProducts' });
     
     const [countResult, products] = await Promise.all([

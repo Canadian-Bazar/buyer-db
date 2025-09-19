@@ -24,9 +24,18 @@ export const getServicesController = async (req, res) => {
     const matchStage = {
       isBlocked: false,
       isArchived: false,
-      completionPercentage: 100,
-      isActive: true
     };
+
+    // Only apply isActive if it is explicitly provided
+    if (validatedData.isActive !== undefined) {
+      matchStage.isActive = (validatedData.isActive === true || validatedData.isActive === 'true');
+    }
+
+    // Do not force completionPercentage to 100 so more services are visible by default
+    if (validatedData.completionPercentage) {
+      const value = parseInt(validatedData.completionPercentage, 10);
+      if (!Number.isNaN(value)) matchStage.completionPercentage = value;
+    }
 
 
     if (validatedData.search) {
@@ -65,14 +74,16 @@ export const getServicesController = async (req, res) => {
     }
 
     if (validatedData.state) {
-      sellerMatchStage['sellerInfo.state'] = {
-        $regex: validatedData.state,
-        $options: 'i'
-      };
+      // Exact match for state codes (e.g., CA provinces) to avoid over-filtering
+      sellerMatchStage['sellerInfo.state'] = validatedData.state;
     }
 
-    if (validatedData.isVerified) {
-      sellerMatchStage['sellerInfo.isVerified'] = validatedData.isVerified === 'true';
+    if (validatedData.isVerified !== undefined) {
+      sellerMatchStage['sellerInfo.isVerified'] = (validatedData.isVerified === true || validatedData.isVerified === 'true');
+    }
+
+    if (validatedData.businessType) {
+      sellerMatchStage['sellerInfo.businessType'] = new mongoose.Types.ObjectId(validatedData.businessType);
     }
 
     if (Object.keys(sellerMatchStage).length > 0) {
@@ -133,6 +144,11 @@ export const getServicesController = async (req, res) => {
         break;
       case 'oldest':
         sortStage = { createdAt: 1 };
+        break;
+      default:
+        // If ratings order requested
+        if (validatedData.ratings === 'asc') sortStage = { avgRating: 1 };
+        if (validatedData.ratings === 'desc') sortStage = { avgRating: -1 };
         break;
     }
 
