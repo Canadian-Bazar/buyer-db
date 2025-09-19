@@ -4,8 +4,12 @@ import validateRequest from "../utils/validateRequest.js";
 
 export const validateGetServices = [
   ...paginationValidator,
-  
-  
+  // Free text search
+  query('search')
+    .optional()
+    .isString()
+    .withMessage('Search should be a string'),
+
   query('minPrice')
     .optional()
     .isNumeric()
@@ -35,6 +39,44 @@ export const validateGetServices = [
     .optional()
     .isBoolean()
     .withMessage('Is Verified should be Boolean'),
+
+  query('isActive')
+    .optional()
+    .isBoolean()
+    .withMessage('isActive should be Boolean'),
+
+  // Business type of seller
+  query('businessType')
+    .optional()
+    .isMongoId()
+    .withMessage('Business Type should be a valid MongoDB ID'),
+
+  // Rating filters
+  query('minRating')
+    .optional()
+    .isNumeric()
+    .withMessage('minRating should be a number'),
+  query('ratings')
+    .optional()
+    .isIn(['asc','desc'])
+    .withMessage('ratings must be asc or desc'),
+
+  // Allow multiple subcategories, mirrors product API
+  query('subcategories')
+    .optional()
+    .custom((value) => {
+      if (!value) return true;
+      const ids = String(value).split(',').map((id) => id.trim()).filter(Boolean);
+      const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+      if (ids.every((id) => objectIdRegex.test(id))) return true;
+      throw new Error('subcategories must be comma-separated Mongo IDs');
+    }),
+
+  // Optional sort parameter
+  query('sortBy')
+    .optional()
+    .isIn(['priceAsc','priceDesc','newest','oldest'])
+    .withMessage('sortBy must be one of priceAsc, priceDesc, newest, oldest'),
   
   (req, res, next) => validateRequest(req, res, next)
 ];

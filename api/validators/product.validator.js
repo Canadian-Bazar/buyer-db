@@ -27,6 +27,11 @@ export const validateGetProducts=[
     .isBoolean()
     .withMessage('Is Verified shoule be Boolean') ,
     
+    query('isActive')
+    .optional()
+    .isBoolean()
+    .withMessage('isActive should be Boolean') ,
+    
 
     query('ratings')
     .optional()  ,
