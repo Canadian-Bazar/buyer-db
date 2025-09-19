@@ -9,7 +9,7 @@ import mongoose from 'mongoose';
  * @param {boolean} checkQuotationStatus - Whether to check for existing quotations
  * @returns {Object} - Filter stages and match conditions
  */
-export const buildProductFilters = (filterParams, isProductStatsQuery = false, userId = null, checkQuotationStatus = true) => {
+  export const buildProductFilters = (filterParams, isProductStatsQuery = false, userId = null, checkQuotationStatus = true, matchStage = {}) => {
   const stages = [];
   
   // Determine field prefixes based on query type
@@ -19,8 +19,10 @@ export const buildProductFilters = (filterParams, isProductStatsQuery = false, u
   
   
   // Initial match conditions
-  const initialMatch = {};
-  initialMatch.completionPercentage = { $eq: 100 };
+    const initialMatch = matchStage;
+  // Relax completion filter to include all products regardless of completion percentage
+  // If strict completeness is needed, gate it behind an explicit flag in filterParams
+  // initialMatch.completionPercentage = { $eq: 100 };
   // Always exclude blocked/archived and default to active items
   initialMatch[`${prefix}isBlocked`] = false;
   initialMatch[`${prefix}isArchived`] = false;
@@ -88,7 +90,8 @@ export const buildProductFilters = (filterParams, isProductStatsQuery = false, u
 
   
   // Enforce approved sellers only
-  sellerMatch[isProductStatsQuery ? 'seller.approvalStatus' : 'sellerData.approvalStatus'] = 'approved';
+  // Allow all sellers except explicitly rejected
+  sellerMatch[isProductStatsQuery ? 'seller.approvalStatus' : 'sellerData.approvalStatus'] = { $ne: 'rejected' };
   
   // Add specific seller filter (by ID)
   if (filterParams?.seller) {

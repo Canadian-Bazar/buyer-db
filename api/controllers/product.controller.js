@@ -53,7 +53,8 @@ export const getProductsController = async (req, res) => {
         ...childIds
       ];
     }
-    
+    const matchStage = {
+    };
     const pipeline = [
       {
         $lookup: {
@@ -80,7 +81,7 @@ export const getProductsController = async (req, res) => {
       { $unwind: '$sellerData' }
     ];
     
-    const filterStages = await buildProductFilters(validatedData, false, userId);
+    const filterStages = await buildProductFilters(validatedData, false, userId, true, matchStage);
     pipeline.push(...filterStages);
     
     pipeline.push({ $skip: skip });

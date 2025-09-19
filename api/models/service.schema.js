@@ -10,7 +10,11 @@ const ServiceSchema = new mongoose.Schema({
     } ,
 
 
-
+isActive:{
+    type: Boolean,
+    default: true,
+    index: true
+},
 
     seller: {
         type: mongoose.Schema.Types.ObjectId,

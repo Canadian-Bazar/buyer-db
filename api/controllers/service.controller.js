@@ -230,7 +230,7 @@ export const getServiceDetailsController = async (req, res) => {
       isBlocked: false,
       isArchived: false,
       completionPercentage: 100,
-      isActive: true
+        isActive: true
     };
 
     if (isObjectId) {
