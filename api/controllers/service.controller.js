@@ -26,9 +26,16 @@ export const getServicesController = async (req, res) => {
       isArchived: false,
     };
 
-    // Only apply isActive if it is explicitly provided
+    // Show all except explicitly inactive by default or when isActive=true is requested
     if (validatedData.isActive !== undefined) {
-      matchStage.isActive = (validatedData.isActive === true || validatedData.isActive === 'true');
+      const wantsActive = (validatedData.isActive === true || validatedData.isActive === 'true');
+      if (wantsActive) {
+        matchStage.isActive = { $ne: false };
+      } else {
+        matchStage.isActive = false;
+      }
+    } else {
+      matchStage.isActive = { $ne: false };
     }
 
     // Do not force completionPercentage to 100 so more services are visible by default
@@ -48,6 +55,17 @@ export const getServicesController = async (req, res) => {
     if (validatedData.category) {
       matchStage.category = new mongoose.Types.ObjectId(validatedData.category);
     }
+    // Support multiple subcategories similar to product API
+    if (validatedData.subcategories) {
+      const ids = String(validatedData.subcategories)
+        .split(',')
+        .map((id) => id.trim())
+        .filter((id) => id)
+        .map((id) => new mongoose.Types.ObjectId(id));
+      if (ids.length > 0) {
+        matchStage.category = { $in: ids };
+      }
+    }
 
 
     pipeline.push({ $match: matchStage });
@@ -61,7 +79,7 @@ export const getServicesController = async (req, res) => {
       }
     });
     pipeline.push({
-      $unwind: '$sellerInfo'
+      $unwind: { path: '$sellerInfo', preserveNullAndEmptyArrays: true }
     });
 
     const sellerMatchStage = {};
@@ -198,7 +216,7 @@ export const getServicesController = async (req, res) => {
           as: 'sellerInfo'
         }
       },
-      { $unwind: '$sellerInfo' }
+      { $unwind: { path: '$sellerInfo', preserveNullAndEmptyArrays: true } }
     ];
 
     if (Object.keys(sellerMatchStage).length > 0) {

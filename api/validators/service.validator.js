@@ -63,7 +63,14 @@ export const validateGetServices = [
 
   // Allow multiple subcategories, mirrors product API
   query('subcategories')
-    .optional(),
+    .optional()
+    .custom((value) => {
+      if (!value) return true;
+      const ids = String(value).split(',').map((id) => id.trim()).filter(Boolean);
+      const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+      if (ids.every((id) => objectIdRegex.test(id))) return true;
+      throw new Error('subcategories must be comma-separated Mongo IDs');
+    }),
 
   // Optional sort parameter
   query('sortBy')
