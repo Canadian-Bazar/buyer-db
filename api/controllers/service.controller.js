@@ -263,8 +263,10 @@ export const getServiceDetailsController = async (req, res) => {
     const matchQuery = {
       isBlocked: false,
       isArchived: false,
-      completionPercentage: 100,
-        isActive: true
+      // Allow fetching even if incomplete; UI can handle presentation
+      // completionPercentage: 100,
+      // Consider any service active unless explicitly false
+      isActive: { $ne: false }
     };
 
     if (isObjectId) {

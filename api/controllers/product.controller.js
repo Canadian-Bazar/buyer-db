@@ -177,6 +177,16 @@ export const getProductInfoController = async(req, res) => {
 
             {
               $lookup: {
+                from: 'Category',
+                localField: 'categoryId',
+                foreignField: '_id',
+                as: 'categoryData'
+              }
+            },
+            { $unwind: { path: '$categoryData', preserveNullAndEmptyArrays: true } },
+
+            {
+              $lookup: {
                 from: 'BusinessType',
                 localField: 'sellerData.businessType',
                 foreignField: '_id',
@@ -192,6 +202,7 @@ export const getProductInfoController = async(req, res) => {
                 isCustomizable: 1,
                 slug: 1,
                 categoryId:1 ,
+                categoryName: '$categoryData.name',
                 avgRating: 1,
                 ratingsCount: 1,
                 isVerified: 1,
