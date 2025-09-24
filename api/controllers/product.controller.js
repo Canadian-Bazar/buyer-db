@@ -177,6 +177,16 @@ export const getProductInfoController = async(req, res) => {
 
             {
               $lookup: {
+                from: 'Category',
+                localField: 'categoryId',
+                foreignField: '_id',
+                as: 'categoryData'
+              }
+            },
+            { $unwind: { path: '$categoryData', preserveNullAndEmptyArrays: true } },
+
+            {
+              $lookup: {
                 from: 'BusinessType',
                 localField: 'sellerData.businessType',
                 foreignField: '_id',
@@ -192,6 +202,7 @@ export const getProductInfoController = async(req, res) => {
                 isCustomizable: 1,
                 slug: 1,
                 categoryId:1 ,
+                categoryName: '$categoryData.name',
                 avgRating: 1,
                 ratingsCount: 1,
                 isVerified: 1,
@@ -365,7 +376,18 @@ export const getProductInfoController = async(req, res) => {
             bestsellerScore: { $arrayElemAt: ['$statsData.bestsellerScore', 0] }
           },
           
-productAttributes: { $first: '$attributesData.attributesArray' },
+productAttributes: {
+  $let: {
+    vars: { firstAttrDoc: { $arrayElemAt: ['$attributesData', 0] } },
+    in: {
+      $cond: [
+        { $gt: [{ $size: '$attributesData' }, 0] },
+        '$$firstAttrDoc.attributesArray',
+        []
+      ]
+    }
+  }
+},
           
           isLiked: { $ifNull: [{ $arrayElemAt: ['$likedData.isLiked', 0] }, false] }
         }
@@ -398,9 +420,9 @@ productAttributes: { $first: '$attributesData.attributesArray' },
       throw buildErrorObject(httpStatus.BAD_REQUEST, 'Invalid Product');
     }
 
-    if (userId) {
-      const productId = productInfo[0]._id.toString();
-      const likeKey = REDIS_KEYS.LIKE_BATCH + productId + ':' + userId.toString();
+    if (userId && productInfo?.[0]?._id) {
+      const productId = String(productInfo[0]._id);
+      const likeKey = REDIS_KEYS.LIKE_BATCH + productId + ':' + String(userId);
       
       try {
         const likeData = await redisClient.hgetall(likeKey);

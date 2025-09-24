@@ -1,7 +1,7 @@
 const handleError = (res, err) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.log(err)
-  }
+  // Always log errors to help debugging locally
+  // eslint-disable-next-line no-console
+  console.error(err)
 
   const response = {
     success: false,
