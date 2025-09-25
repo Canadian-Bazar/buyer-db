@@ -15,6 +15,114 @@ const ProductSchema = new mongoose.Schema(
       type: String,
       unique: true,
       index: true,
+      trim: true,
+      lowercase: true,
+    },
+    description: {
+      type: String,
+      trim: true,
+    },
+    shortDescription: {
+      type: String,
+      trim: true,
+      maxlength: 200,
+    },
+    price: {
+      type: Number,
+      required: false,
+      min: 0,
+    },
+    originalPrice: {
+      type: Number,
+      min: 0,
+    },
+    discount: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0,
+    },
+    category: {
+      type: mongoose.Types.ObjectId,
+      ref: 'Category',
+      required: false,
+    },
+    categoryName: {
+      type: String,
+      trim: true,
+    },
+    subcategory: {
+      type: mongoose.Types.ObjectId,
+      ref: 'Category',
+    },
+    subcategoryName: {
+      type: String,
+      trim: true,
+    },
+    images: [String],
+    thumbnail: {
+      type: String,
+    },
+    videos: [String],
+    sku: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    stock: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    isInStock: {
+      type: Boolean,
+      default: true,
+    },
+    weight: {
+      type: Number,
+      min: 0,
+    },
+    dimensions: {
+      length: { type: Number, min: 0 },
+      width: { type: Number, min: 0 },
+      height: { type: Number, min: 0 },
+    },
+    tags: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    specifications: [
+      {
+        name: { type: String, required: true },
+        value: { type: String, required: true },
+      },
+    ],
+    features: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    isActive: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+    seller: {
+      type: mongoose.Types.ObjectId,
+      ref: 'Seller',
+      required: true,
+      index: true,
+    },
+    rating: {
+      average: { type: Number, default: 0, min: 0, max: 5 },
+      count: { type: Number, default: 0, min: 0 },
     },
     avgRating: {
       type: Number,
@@ -27,24 +135,39 @@ const ProductSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
-    isVerified: {
-      type: Boolean,
-      default: false,
-      required: true,
+    reviews: [
+      {
+        user: { type: mongoose.Types.ObjectId, ref: 'User' },
+        rating: { type: Number, min: 1, max: 5 },
+        comment: { type: String, trim: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    seoTitle: {
+      type: String,
+      trim: true,
     },
-    seller: {
-      type: mongoose.Types.ObjectId,
-      ref: 'Seller',
-      required: true,
-      index: true,
+    seoDescription: {
+      type: String,
+      trim: true,
     },
-    images: [String],
-    videos: [String],
-
+    seoKeywords: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    city: {
+      type: String,
+      trim: true,
+    },
+    status: {
+      type: String,
+      enum: ['draft', 'published', 'archived'],
+      default: 'draft',
+    },
     about: [String],
-
     services: [String],
-
     descriptionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ProductDescription',
@@ -82,27 +205,23 @@ const ProductSchema = new mongoose.Schema(
       default: false,
       required: true,
     },
-
     isComplete: {
       type: Boolean,
       default: false,
       index: true,
     },
-
     completionPercentage: {
       type: Number,
       default: 0,
       min: 0,
       max: 100,
     },
-
     incompleteSteps: [
       {
         type: String,
         enum: ['productInfo', 'attributes', 'images', 'pricing', 'services'],
       },
     ],
-
     stepStatus: {
       productInfo: { type: Boolean, default: false },
       attributes: { type: Boolean, default: false },
@@ -110,35 +229,32 @@ const ProductSchema = new mongoose.Schema(
       pricing: { type: Boolean, default: false },
       services: { type: Boolean, default: false },
     },
-
     brochure: {
       type: String,
       default: null,
     },
-
     isBlocked: {
       type: Boolean,
       default: false,
       required: true,
     },
-
     isArchived: {
       type: Boolean,
       default: false,
       required: true,
     },
-    isActive: {
-      type: Boolean,
-      default: true,
-      index: true,
-    },
   },
   { timestamps: true, collection: 'Product' },
 );
 
-ProductSchema.index({ name: 'text' });
+// Indexes (superset)
+ProductSchema.index({ name: 'text', description: 'text', tags: 'text' });
 ProductSchema.index({ isVerified: 1 });
 ProductSchema.index({ avgRating: -1 });
+ProductSchema.index({ category: 1, isActive: 1 });
+ProductSchema.index({ price: 1 });
+ProductSchema.index({ rating: -1 });
+ProductSchema.index({ createdAt: -1 });
 
 ProductSchema.plugin(paginate);
 ProductSchema.plugin(aggregatePaginate);
