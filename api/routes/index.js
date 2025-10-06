@@ -28,6 +28,7 @@ import internalRoutes from './internal.routes.js'
 import serviceReviewRoutes from './service-reviews.routes.js'
 import cncQuotesRoutes from './cnc-quotes.routes.js'
 import locationRoutes from './location.routes.js'
+import seoRoutes from './seo.routes.js'
 
 const v1Routes = express.Router()
 const router = express.Router()
@@ -61,6 +62,7 @@ v1Routes.use('/service-review', serviceReviewRoutes)
 v1Routes.use('/cnc-quotes', cncQuotesRoutes)
 v1Routes.use('/locations', locationRoutes)
 v1Routes.use('/internal', internalRoutes)
+v1Routes.use('/seo', seoRoutes)
 
 
 
