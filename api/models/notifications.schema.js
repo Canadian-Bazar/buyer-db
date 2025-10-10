@@ -33,14 +33,34 @@ const BuyerNotificationSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['quote_accepted', 'quote_rejected', 'quote_updated', 'admin_message', 'system_alert', 'other' , 'negotiation' , 'invoice_created' , "service_quote_rejected"],
+        enum: [
+            // Existing types
+            'quote_accepted', 'quote_rejected', 'quote_updated', 'admin_message', 'system_alert', 'other', 'negotiation', 'invoice_created', 'service_quote_rejected',
+            // New for chat/inbox parity with seller side
+            'inbox', 'order', 'invoice', 'inquiry', 'review'
+        ],
         required: true,
         index: true
     },
-    
+
+    // Optional title for richer notifications (parity with seller)
+    title: {
+        type: String,
+    },
+
     message: {
         type: String,
         required: true
+    },
+
+    // Reference id to related entity (chat, invoice, quotation, order, review, etc.)
+    refId: {
+        type: mongoose.Schema.Types.ObjectId,
+    },
+
+    // Flexible metadata to attach additional context
+    metadata: {
+        type: mongoose.Schema.Types.Mixed,
     },
     isRead: {
         type: Boolean,

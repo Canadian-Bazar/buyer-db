@@ -1,4 +1,4 @@
-import BuyerNotifications from '../models/buyer-notifications.schema.js';
+import BuyerNotifications from '../models/notifications.schema.js';
 
 
 
