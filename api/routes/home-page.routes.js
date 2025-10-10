@@ -13,5 +13,12 @@ homePageRoutes.get(
   homePageController.getRecentSellers
 );
 
+homePageRoutes.get(
+  '/landing-features',
+  trimRequest.all,
+  homePageValidator.validateGetLandingFeatures,
+  homePageController.getLandingFeatures
+);
+
 
 export default homePageRoutes;

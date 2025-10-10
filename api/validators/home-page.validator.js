@@ -8,3 +8,7 @@ export const validateGetRecentSellers = [
     ...paginationValidator ,
     (req , res , next)=>validateRequest(req , res , next)
 ]
+
+export const validateGetLandingFeatures = [
+    (req , res , next)=>validateRequest(req , res , next)
+]

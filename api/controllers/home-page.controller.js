@@ -1,4 +1,5 @@
 import Sellers from '../models/seller.schema.js';
+import LandingFeature from '../models/landing-feature.schema.js';
 import handleError from '../utils/handleError.js';
 import buildErrorObject from '../utils/buildErrorObject.js';
 import buildResponse from '../utils/buildResponse.js';
@@ -54,5 +55,25 @@ export const getRecentSellers = async (req, res) => {
     res
       .status(httpStatus.INTERNAL_SERVER_ERROR)
       .json(buildResponse(httpStatus.INTERNAL_SERVER_ERROR, err.message));
+  }
+};
+
+export const getLandingFeatures = async (req, res) => {
+  try {
+    const validatedData = matchedData(req);
+    const limit = Math.min(Number(validatedData.limit || 10), 50);
+
+    const features = await LandingFeature.find({ isActive: true })
+      .sort({ order: 1, createdAt: 1 })
+      .limit(limit)
+      .lean();
+
+    res.status(httpStatus.OK).json(
+      buildResponse(httpStatus.OK, {
+        docs: features,
+      })
+    );
+  } catch (err) {
+    handleError(res, err);
   }
 };
