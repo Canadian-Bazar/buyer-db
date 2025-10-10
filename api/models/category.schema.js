@@ -49,6 +49,18 @@ CategorySchema.plugin(aggregatePaginate);
 
 
 
+// Include virtuals in JSON/Object outputs (to expose coverImage to clients)
+CategorySchema.set('toJSON', { virtuals: true });
+CategorySchema.set('toObject', { virtuals: true });
+
+// Virtual: derive filename/key from full image URL, matching admin behavior
+CategorySchema.virtual('coverImage').get(function() {
+  const image = this.image;
+  if (!image || typeof image !== 'string') return undefined;
+  const lastSlashIndex = image.lastIndexOf('/');
+  return lastSlashIndex >= 0 ? image.substring(lastSlashIndex + 1) : image;
+});
+
 CategorySchema.methods.getTopMostParent = async function() {
   if (!this.parentCategory) {
     return this; // This is already the topmost parent

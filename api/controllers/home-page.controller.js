@@ -1,5 +1,6 @@
 import Sellers from '../models/seller.schema.js';
 import LandingFeature from '../models/landing-feature.schema.js';
+import HomeSettings from '../models/home-settings.schema.js';
 import handleError from '../utils/handleError.js';
 import buildErrorObject from '../utils/buildErrorObject.js';
 import buildResponse from '../utils/buildResponse.js';
@@ -55,6 +56,27 @@ export const getRecentSellers = async (req, res) => {
     res
       .status(httpStatus.INTERNAL_SERVER_ERROR)
       .json(buildResponse(httpStatus.INTERNAL_SERVER_ERROR, err.message));
+  }
+};
+
+export const getHeroSettings = async (_req, res) => {
+  try {
+    const settings = await HomeSettings.findOne({}).sort({ updatedAt: -1 }).lean();
+    return res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, settings || {}));
+  } catch (err) {
+    handleError(res, err);
+  }
+};
+
+export const listHeroSettings = async (_req, res) => {
+  try {
+    const docs = await HomeSettings.find({ isActive: true })
+      .sort({ updatedAt: -1 })
+      .limit(4)
+      .lean();
+    return res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, { docs }));
+  } catch (err) {
+    handleError(res, err);
   }
 };
 

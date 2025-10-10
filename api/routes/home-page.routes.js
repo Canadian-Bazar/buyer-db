@@ -20,5 +20,19 @@ homePageRoutes.get(
   homePageController.getLandingFeatures
 );
 
+homePageRoutes.get(
+  '/hero-settings',
+  trimRequest.all,
+  homePageValidator.validateGetHeroSettings,
+  homePageController.getHeroSettings
+);
+
+homePageRoutes.get(
+  '/hero-settings/list',
+  trimRequest.all,
+  homePageValidator.validateGetHeroSettings,
+  homePageController.listHeroSettings
+);
+
 
 export default homePageRoutes;

@@ -12,3 +12,7 @@ export const validateGetRecentSellers = [
 export const validateGetLandingFeatures = [
     (req , res , next)=>validateRequest(req , res , next)
 ]
+
+export const validateGetHeroSettings = [
+    (req , res , next)=>validateRequest(req , res , next)
+]
