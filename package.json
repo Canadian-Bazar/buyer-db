@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
+    "start": "node server.js",
     "clean": "node clean.js",
     "seed": "node seed.js",
     "backfill:blog-slugs": "node ./api/batches/backfillBlogSlugs.js",
