@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "clean": "node clean.js",
     "seed": "node seed.js",
+    "backfill:blog-slugs": "node ./api/batches/backfillBlogSlugs.js",
     "lint:write": "eslint --fix --config .eslintrc.js \"**/**.js\"",
     "lint:check": "eslint --config .eslintrc.js \"**/**.js\"",
     "compareEnv": "node compareEnv.js",

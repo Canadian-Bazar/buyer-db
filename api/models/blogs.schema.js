@@ -10,6 +10,13 @@ const BlogsSchema = new mongoose.Schema({
         type:String ,
         required:true ,
     } ,
+    // URL-friendly unique slug generated from title
+    slug: {
+        type: String,
+        required: true,
+        unique: true,
+        index: true,
+    },
 
     content:{
         type:String ,
@@ -29,7 +36,7 @@ const BlogsSchema = new mongoose.Schema({
 
 
 
-BlogsSchema.pre('save', async function(next) {
+BlogsSchema.pre('validate', async function(next) {
   if (!this.isModified('title')) {
     return next();
   }
