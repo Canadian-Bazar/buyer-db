@@ -1,5 +1,17 @@
 import mongoose from 'mongoose';
 
+const LineItemSchema = new mongoose.Schema(
+  {
+    description: { type: String, default: '' },
+    productId: { type: mongoose.Types.ObjectId, ref: 'Product', default: null },
+    productName: { type: String, default: '' },
+    quantity: { type: Number, required: true, min: 0, default: 1 },
+    unitPrice: { type: Number, required: true, min: 0, default: 0 },
+    lineTotal: { type: Number, required: true, min: 0, default: 0 },
+  },
+  { _id: false }
+)
+
 const InvoiceSchema = new mongoose.Schema({
     quotationId: {
         type: mongoose.Types.ObjectId,
@@ -26,10 +38,13 @@ const InvoiceSchema = new mongoose.Schema({
         ref: 'Buyer'
     },
     
-    negotiatedPrice: {
-        type: Number,
-        required: true
-    },
+    items: { type: [LineItemSchema], default: [] },
+
+    negotiatedPrice: { type: Number, min: 0 },
+    taxAmount: { type: Number, default: 0, min: 0 },
+    shippingCharges: { type: Number, default: 0, min: 0 },
+    additionalFees: { type: Number, default: 0, min: 0 },
+    totalAmount: { type: Number, default: 0, min: 0 },
     
     // Payment and delivery terms
     paymentTerms: {
@@ -43,21 +58,6 @@ const InvoiceSchema = new mongoose.Schema({
     },
     
     // Additional details
-    taxAmount: {
-        type: Number,
-        default: 0
-    },
-    
-    shippingCharges: {
-        type: Number,
-        default: 0
-    },
-    
-    totalAmount: {
-        type: Number,
-        required: true
-    },
-    
     status: {
         type: String,
         enum: ['pending', 'accepted', 'rejected', 'expired'],
@@ -88,10 +88,7 @@ const InvoiceSchema = new mongoose.Schema({
         default: null
     },
     
-    expiresAt: {
-        type: Date,
-        default: () => new Date(Date.now() + 24 * 60 * 60 * 1000) 
-    },
+    expiresAt: { type: Date },
     
     notes: {
         type: String

@@ -23,6 +23,12 @@ const SellerSchema = new mongoose.Schema({
           lowercase: true,
      },
 
+     parentCategory:{
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Category',
+          required: false,
+     } ,
+
      businessType: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'BusinessType',
@@ -87,10 +93,50 @@ const SellerSchema = new mongoose.Schema({
           required:true
      } ,
 
+     isBlocked: {
+          type: Boolean,
+          default: false,
+          required: true
+     },
+     blockReason: {
+          type: String,
+          required: false,
+          trim: true
+     },
+
      stripeCustomerId:{
           type:String
      }
-    
+    ,
+
+     companyWebsite:{
+          type:String ,
+     } ,
+
+     yearEstablished:{
+          type:Number ,
+     } ,
+
+     numberOfEmployees:{
+          type:Number ,
+     } ,
+
+     certifications:[{
+          name: String ,
+          url: String
+     }]  ,
+
+     socialMediaLinks:[{
+          platform: String ,
+          url: String
+     }] ,
+
+     languagesSupported:[
+          {
+               code:String ,
+               name:String 
+          }
+     ]
 
 }, {
      timestamps: true,
