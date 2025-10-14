@@ -40,6 +40,10 @@ const CategorySchema = new mongoose.Schema({
 
     image:{
         type:String 
+    },
+    city: {
+        type: String,
+        trim: true
     }
 
   }, { timestamps: true  , collection:'Category'});
