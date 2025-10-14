@@ -71,7 +71,7 @@ export const getHeroSettings = async (_req, res) => {
 export const listHeroSettings = async (_req, res) => {
   try {
     const docs = await HomeSettings.find({ isActive: true })
-      .sort({ updatedAt: -1 })
+      .sort({ updatedAt: 1 })
       .limit(4)
       .lean();
     return res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, { docs }));
