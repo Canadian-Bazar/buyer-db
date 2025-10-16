@@ -159,7 +159,7 @@ export const loginController = async (req, res) => {
     user.loginAttempts = 0
     await user.save()
     user = await Buyer.findById(user._id)
-      .select('fullName city state')
+      .select('fullName city state email')
       .populate([{
         path: 'preferredLanguage',
         select: 'name _id' ,
@@ -172,6 +172,55 @@ export const loginController = async (req, res) => {
       .lean()
 
       user.role='buyer'
+
+    // Send login notification email
+    try {
+      const loginTime = new Date().toLocaleTimeString('en-US', { 
+        timeZone: 'America/Toronto',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true 
+      });
+      const loginDate = new Date().toLocaleDateString('en-US', { 
+        timeZone: 'America/Toronto',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      
+      // Get client IP and basic device info
+      const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+      const userAgent = req.headers['user-agent'] || 'Unknown';
+      const device = userAgent.includes('Mobile') ? 'Mobile Device' : 
+                    userAgent.includes('Tablet') ? 'Tablet' : 'Desktop';
+      
+      // Basic location detection (you can enhance this with IP geolocation service)
+      const location = 'Canada'; // Default location, can be enhanced with IP geolocation
+      
+      // Check if this is a recognized device (you can implement device tracking)
+      const isRecognizedDevice = true; // For now, assume all devices are recognized
+      
+      const changePasswordUrl = `${process.env.FRONTEND_URL || 'https://buyer.canadian-bazaar.com'}/change-password`;
+      const profileUrl = `${process.env.FRONTEND_URL || 'https://buyer.canadian-bazaar.com'}/profile`;
+      
+      await sendMail(user.email, 'buyer-login-notification.ejs', {
+        fullName: user.fullName,
+        loginTime,
+        loginDate,
+        ipAddress,
+        location,
+        device,
+        isRecognizedDevice,
+        changePasswordUrl,
+        profileUrl,
+        userAgent: userAgent.substring(0, 100), // Truncate for email
+        subject: 'Security Alert: New Login to Your Account'
+      });
+    } catch (emailError) {
+      // Log the error but don't fail the login
+      console.error('Failed to send buyer login notification email:', emailError);
+    }
+
 const { buyerAccessToken, buyerRefreshToken } = generateTokens(user)
 
 
