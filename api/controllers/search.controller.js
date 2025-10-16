@@ -166,8 +166,8 @@ export const unifiedSearchController = async (req, res) => {
             ...(searchQuery
               ? { companyName: { $regex: `^${searchQuery}`, $options: 'i' } }
               : {}),
-            isBlocked: false,
-            isVerified: false,
+            isBlocked: { $ne: true }, // Exclude blocked sellers
+            isVerified: true, // Only show verified sellers
             isProfileComplete: true,
          
           }
