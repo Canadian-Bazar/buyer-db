@@ -162,9 +162,15 @@ export const unifiedSearchController = async (req, res) => {
       // Sellers: search by companyName
       const sellerPipeline = [
         {
-          $match: searchQuery
-            ? { companyName: { $regex: `^${searchQuery}`, $options: 'i' } }
-            : {},
+          $match: {
+            ...(searchQuery
+              ? { companyName: { $regex: `^${searchQuery}`, $options: 'i' } }
+              : {}),
+            isBlocked: false,
+            isVerified: false,
+            isProfileComplete: true,
+         
+          }
         },
         {
           $lookup: {

@@ -24,6 +24,13 @@ export const getSellerProfileController = async (req, res) => {
             )
         }
 
+        // Check if seller is blocked or not verified
+        if (seller.isBlocked || !seller.isVerified) {
+            return res.status(httpStatus.NOT_FOUND).json(
+                buildResponse(httpStatus.NOT_FOUND, 'Seller not found')
+            )
+        }
+
         // Fetch products
         const products = await Product.find({ 
             seller: sellerId,
@@ -69,7 +76,10 @@ export const listSellersController = async (req, res) => {
         const limit = Math.min(parseInt(v.limit) || 12, 50)
         const skip = (page - 1) * limit
 
-        const match = {}
+        const match = {
+            isBlocked: { $ne: true }, // Exclude blocked sellers
+            isVerified: true // Only show verified sellers
+        }
 
         if (v.search) {
             match.companyName = { $regex: v.search, $options: 'i' }
