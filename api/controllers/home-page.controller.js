@@ -16,6 +16,7 @@ export const getRecentSellers = async (req, res) => {
     const limit = Math.min(validatedData.limit || 5, 20);
 
     const query = {
+      isBlocked: false,
       isVerified: true,
       isProfileComplete: true,
       approvalStatus: "approved",
