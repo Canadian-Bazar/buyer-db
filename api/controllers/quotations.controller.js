@@ -6,6 +6,8 @@ import  httpStatus  from 'http-status';
 import Product from '../models/products.schema.js'
 import buildErrorObject from '../utils/buildErrorObject.js'
 import { publishQuotationSentEvent } from '../redis/quotation-analytics.redis.js'
+import Seller from '../models/seller.schema.js'
+import sendMail from '../helpers/sendMail.js'
 
 
 
@@ -49,6 +51,27 @@ export const createQuotationController = async (req, res) => {
             buyerId: req.user._id,
             isService: false
         });
+
+        // 📧 Send email notification to seller
+        try {
+            const seller = await Seller.findById(product.seller).select('companyName email').lean();
+            if (seller && seller.email) {
+                const dashboardUrl = `${process.env.SELLER_FRONTEND_URL || 'https://seller.canadian-bazaar.ca'}/quotations`;
+                
+                await sendMail(seller.email, 'inquiry-received.ejs', {
+                    companyName: seller.companyName,
+                    buyerName: req.user.fullName || 'A buyer',
+                    productName: product.name,
+                    quantity: validatedData.quantity || 'N/A',
+                    requirements: validatedData.description || 'No specific requirements mentioned',
+                    dashboardUrl: dashboardUrl,
+                    subject: `New Inquiry Received for ${product.name}`
+                });
+            }
+        } catch (emailError) {
+            // Log but don't fail the request
+            console.error('Failed to send inquiry notification email to seller:', emailError);
+        }
 
         res.status(httpStatus.CREATED).json(
             buildResponse(httpStatus.CREATED, 'Quotation Sent Successfully')

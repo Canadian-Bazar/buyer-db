@@ -1,0 +1,85 @@
+<!-- Email Template: Welcome Buyer -->
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
+  
+  <!-- Header with Icon -->
+  <div style="text-align: center; margin-bottom: 30px;">
+    <div style="display: inline-block; width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; padding: 15px; margin-bottom: 15px;">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7 18C5.9 18 5.01 18.9 5.01 20C5.01 21.1 5.9 22 7 22C8.1 22 9 21.1 9 20C9 18.9 8.1 18 7 18ZM1 2V4H3L6.6 11.59L5.25 14.04C5.09 14.32 5 14.65 5 15C5 16.1 5.9 17 7 17H19V15H7.42C7.28 15 7.17 14.89 7.17 14.75L7.2 14.63L8.1 13H15.55C16.3 13 16.96 12.59 17.3 11.97L20.88 5.48C20.96 5.34 21 5.17 21 5C21 4.45 20.55 4 20 4H5.21L4.27 2H1ZM17 18C15.9 18 15.01 18.9 15.01 20C15.01 21.1 15.9 22 17 22C18.1 22 19 21.1 19 20C19 18.9 18.1 18 17 18Z" fill="white"/>
+      </svg>
+    </div>
+    <h1 style="color: #333; margin: 0; font-size: 28px; font-weight: 600;">Welcome to Canadian Bazaar!</h1>
+  </div>
+
+  <!-- Main Content -->
+  <div style="background-color: #f8f9fa; border-radius: 10px; padding: 25px; margin-bottom: 25px; border-left: 4px solid #667eea;">
+    <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
+      Hello <strong><%= fullName %></strong>,
+    </p>
+    
+    <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 10px 0;">
+      🎉 <strong>Welcome to Canadian Bazaar!</strong> Thank you for creating your account.
+    </p>
+    
+    <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0;">
+      You now have access to thousands of products and services from trusted Canadian businesses.
+    </p>
+  </div>
+
+  <!-- What You Can Do -->
+  <div style="background-color: #fff; border: 2px solid #e9ecef; border-radius: 10px; padding: 20px; margin-bottom: 25px;">
+    <h3 style="color: #667eea; margin: 0 0 15px 0; font-size: 18px;">
+      🎯 What You Can Do
+    </h3>
+    
+    <ul style="color: #555; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
+      <li><strong>Browse Products & Services</strong> - Explore thousands of listings from verified sellers</li>
+      <li><strong>Send Inquiries</strong> - Request quotes and ask questions directly to sellers</li>
+      <li><strong>Negotiate Deals</strong> - Chat with sellers to get the best prices</li>
+      <li><strong>Track Orders</strong> - Monitor your orders from purchase to delivery</li>
+      <li><strong>Leave Reviews</strong> - Share your experience and help others</li>
+    </ul>
+  </div>
+
+  <!-- CTA Button -->
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="<%= browseUrl %>" 
+       style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; 
+              padding: 14px 35px; text-decoration: none; border-radius: 8px; font-weight: 600; 
+              font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+      Start Browsing
+    </a>
+  </div>
+
+  <!-- Tips Section -->
+  <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
+    <p style="color: #856404; font-size: 14px; line-height: 1.5; margin: 0 0 10px 0;">
+      <strong>💡 Pro Tips:</strong>
+    </p>
+    <ul style="color: #856404; font-size: 13px; line-height: 1.6; margin: 0; padding-left: 20px;">
+      <li>Use the search filters to find exactly what you need</li>
+      <li>Check seller ratings and reviews before making inquiries</li>
+      <li>Compare multiple quotes to get the best deal</li>
+      <li>Add items to your wishlist to save for later</li>
+    </ul>
+  </div>
+
+  <!-- Support Section -->
+  <div style="background-color: #d1ecf1; border-left: 4px solid #0c5460; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
+    <p style="color: #0c5460; font-size: 14px; line-height: 1.5; margin: 0;">
+      <strong>🤝 Need Help?</strong> Our support team is here for you! Visit our <a href="https://canadian-bazaar.ca/help" style="color: #0c5460; font-weight: 600;">Help Center</a> or email us at <a href="mailto:support@canadian-bazaar.ca" style="color: #0c5460; font-weight: 600;">support@canadian-bazaar.ca</a>
+    </p>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e9ecef;">
+    <p style="color: #999; font-size: 13px; line-height: 1.5; margin: 0 0 10px 0;">
+      Happy shopping!
+    </p>
+    <p style="color: #999; font-size: 12px; margin: 0;">
+      © <%= new Date().getFullYear() %> Canadian Bazaar. All rights reserved.
+    </p>
+  </div>
+
+</div>
+

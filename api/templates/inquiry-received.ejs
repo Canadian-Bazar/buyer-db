@@ -1,0 +1,101 @@
+<!-- Email Template: Inquiry/Quotation Received -->
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
+  
+  <!-- Header with Icon -->
+  <div style="text-align: center; margin-bottom: 30px;">
+    <div style="display: inline-block; width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; padding: 15px; margin-bottom: 15px;">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z" fill="white"/>
+      </svg>
+    </div>
+    <h1 style="color: #333; margin: 0; font-size: 28px; font-weight: 600;">New Inquiry Received!</h1>
+  </div>
+
+  <!-- Main Content -->
+  <div style="background-color: #f8f9fa; border-radius: 10px; padding: 25px; margin-bottom: 25px; border-left: 4px solid #667eea;">
+    <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
+      Hello <strong><%= companyName %></strong>,
+    </p>
+    
+    <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 20px 0;">
+      Good news! You have received a new inquiry from a potential buyer on Canadian Bazaar.
+    </p>
+  </div>
+
+  <!-- Inquiry Details -->
+  <div style="background-color: #fff; border: 2px solid #e9ecef; border-radius: 10px; padding: 20px; margin-bottom: 25px;">
+    <h3 style="color: #667eea; margin: 0 0 15px 0; font-size: 18px; border-bottom: 2px solid #e9ecef; padding-bottom: 10px;">
+      📋 Inquiry Details
+    </h3>
+    
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="padding: 10px 0; color: #666; font-size: 14px; width: 40%;">
+          <strong>Buyer Name:</strong>
+        </td>
+        <td style="padding: 10px 0; color: #333; font-size: 14px;">
+          <%= buyerName %>
+        </td>
+      </tr>
+      <% if (productName) { %>
+      <tr>
+        <td style="padding: 10px 0; color: #666; font-size: 14px;">
+          <strong>Product/Service:</strong>
+        </td>
+        <td style="padding: 10px 0; color: #333; font-size: 14px;">
+          <%= productName %>
+        </td>
+      </tr>
+      <% } %>
+      <% if (quantity) { %>
+      <tr>
+        <td style="padding: 10px 0; color: #666; font-size: 14px;">
+          <strong>Quantity:</strong>
+        </td>
+        <td style="padding: 10px 0; color: #333; font-size: 14px;">
+          <%= quantity %>
+        </td>
+      </tr>
+      <% } %>
+      <% if (requirements) { %>
+      <tr>
+        <td style="padding: 10px 0; color: #666; font-size: 14px; vertical-align: top;">
+          <strong>Requirements:</strong>
+        </td>
+        <td style="padding: 10px 0; color: #333; font-size: 14px;">
+          <%= requirements %>
+        </td>
+      </tr>
+      <% } %>
+    </table>
+  </div>
+
+  <!-- CTA Button -->
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="<%= dashboardUrl %>" 
+       style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; 
+              padding: 14px 35px; text-decoration: none; border-radius: 8px; font-weight: 600; 
+              font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+      View Inquiry & Respond
+    </a>
+  </div>
+
+  <!-- Tips Section -->
+  <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
+    <p style="color: #856404; font-size: 14px; line-height: 1.5; margin: 0;">
+      <strong>💡 Quick Tip:</strong> Responding quickly increases your chances of converting this inquiry into a sale!
+    </p>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e9ecef;">
+    <p style="color: #999; font-size: 13px; line-height: 1.5; margin: 0 0 10px 0;">
+      This is an automated notification from Canadian Bazaar
+    </p>
+    <p style="color: #999; font-size: 12px; margin: 0;">
+      © <%= new Date().getFullYear() %> Canadian Bazaar. All rights reserved.
+    </p>
+  </div>
+
+</div>
+
