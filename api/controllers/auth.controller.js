@@ -89,7 +89,22 @@ export const signupController = async (req, res) => {
 
     req.roleId = userRole._id
 
-    await Buyer.create(req)
+    const newBuyer = await Buyer.create(req)
+
+    // 📧 Send welcome email to new buyer
+    try {
+      if (req.email) {
+        const browseUrl = `${process.env.FRONTEND_URL || 'https://buyer.canadian-bazaar.ca'}/browse`;
+        
+        await sendMail(req.email, 'welcome-buyer.ejs', {
+          fullName: req.fullName || 'Valued Customer',
+          browseUrl: browseUrl,
+          subject: 'Welcome to Canadian Bazaar! 🎉'
+        });
+      }
+    } catch (emailError) {
+      console.error('Failed to send welcome email to buyer:', emailError);
+    }
 
     res.status(httpStatus.CREATED).json(buildResponse(httpStatus.CREATED, {
       message: 'User Created Successfully',

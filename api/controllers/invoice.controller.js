@@ -13,6 +13,9 @@ import BuyerAddress from '../models/buyer-address.schema.js';
 import mongoose from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import storeMessageInRedis from '../helpers/storeMessageInRedis.js';
+import sendMail from '../helpers/sendMail.js';
+import Seller from '../models/seller.schema.js';
+import Product from '../models/products.schema.js';
 
 // Helper function to generate unique order ID
 const generateOrderId = () => {
@@ -196,6 +199,54 @@ export const acceptInvoice = async (req, res) => {
         
         await storeMessageInRedis(chat._id, successMessage);
 
+        // 📧 Send email notifications
+        try {
+            // Populate invoice with full details for email
+            const fullInvoice = await Invoice.findById(invoiceId)
+                .populate('quotationId')
+                .populate('sellerId', 'companyName email')
+                .lean();
+            
+            const product = await Product.findById(fullInvoice.quotationId?.productId).select('name').lean();
+            const seller = await Seller.findById(fullInvoice.sellerId).select('companyName email').lean();
+            
+            // Email to buyer
+            if (req.user.email) {
+                const orderUrl = `${process.env.FRONTEND_URL || 'https://buyer.canadian-bazaar.ca'}/orders/${order.orderId}`;
+                
+                await sendMail(req.user.email, 'invoice-accepted.ejs', {
+                    buyerName: req.user.fullName,
+                    orderId: order.orderId,
+                    invoiceNumber: fullInvoice.invoiceNumber || 'N/A',
+                    sellerName: seller?.companyName || 'Seller',
+                    productName: product?.name || 'Product/Service',
+                    totalAmount: fullInvoice.totalAmount || invoice.negotiatedPrice,
+                    currency: fullInvoice.currency || 'CAD',
+                    orderUrl: orderUrl,
+                    subject: `Invoice Accepted - Order ${order.orderId} Created`
+                });
+            }
+            
+            // Email to seller
+            if (seller && seller.email) {
+                const sellerOrderUrl = `${process.env.SELLER_FRONTEND_URL || 'https://seller.canadian-bazaar.ca'}/orders/${order.orderId}`;
+                
+                await sendMail(seller.email, 'invoice-accepted-seller.ejs', {
+                    companyName: seller.companyName,
+                    orderId: order.orderId,
+                    invoiceNumber: fullInvoice.invoiceNumber || 'N/A',
+                    buyerName: req.user.fullName,
+                    productName: product?.name || 'Product/Service',
+                    totalAmount: fullInvoice.totalAmount || invoice.negotiatedPrice,
+                    currency: fullInvoice.currency || 'CAD',
+                    orderUrl: sellerOrderUrl,
+                    subject: `Invoice Accepted - Order ${order.orderId} Created`
+                });
+            }
+        } catch (emailError) {
+            console.error('Failed to send invoice acceptance email:', emailError);
+        }
+
         res.status(httpStatus.OK).json(
             buildResponse(httpStatus.OK, {
                 message: 'Invoice accepted successfully',
@@ -297,6 +348,35 @@ export const rejectInvoice = async (req, res) => {
         };
         
         await storeMessageInRedis(chat._id, rejectionMessage);
+
+        // 📧 Send email notification to seller
+        try {
+            const fullInvoice = await Invoice.findById(invoiceId)
+                .populate('quotationId')
+                .populate('sellerId', 'companyName email')
+                .lean();
+            
+            const product = await Product.findById(fullInvoice.quotationId?.productId).select('name').lean();
+            const seller = await Seller.findById(fullInvoice.sellerId).select('companyName email').lean();
+            
+            if (seller && seller.email) {
+                const chatUrl = `${process.env.SELLER_FRONTEND_URL || 'https://seller.canadian-bazaar.ca'}/chats/${chat._id}`;
+                
+                await sendMail(seller.email, 'invoice-rejected.ejs', {
+                    companyName: seller.companyName,
+                    invoiceNumber: fullInvoice.invoiceNumber || 'N/A',
+                    buyerName: req.user.fullName,
+                    productName: product?.name || 'Product/Service',
+                    totalAmount: fullInvoice.totalAmount || invoice.negotiatedPrice,
+                    currency: fullInvoice.currency || 'CAD',
+                    rejectionReason: rejectionReason || 'No reason provided',
+                    chatUrl: chatUrl,
+                    subject: `Invoice #${fullInvoice.invoiceNumber || 'N/A'} Rejected`
+                });
+            }
+        } catch (emailError) {
+            console.error('Failed to send invoice rejection email:', emailError);
+        }
 
         res.status(httpStatus.OK).json(
             buildResponse(httpStatus.OK, {

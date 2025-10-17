@@ -1,0 +1,174 @@
+<!-- Email Template: Order Status Update -->
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
+  
+  <!-- Header with Icon -->
+  <div style="text-align: center; margin-bottom: 30px;">
+    <div style="display: inline-block; width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; padding: 15px; margin-bottom: 15px;">
+      <% if (status === 'shipped') { %>
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 18.5C18.83 18.5 19.5 17.83 19.5 17C19.5 16.17 18.83 15.5 18 15.5C17.17 15.5 16.5 16.17 16.5 17C16.5 17.83 17.17 18.5 18 18.5ZM19.5 9.5L21.46 12.88L21.5 13V17C21.5 17.83 20.83 18.5 20 18.5H19C19 19.88 17.88 21 16.5 21C15.12 21 14 19.88 14 18.5H10C10 19.88 8.88 21 7.5 21C6.12 21 5 19.88 5 18.5H4C3.17 18.5 2.5 17.83 2.5 17V6.5C2.5 5.67 3.17 5 4 5H17V9.5H19.5ZM7.5 18.5C8.33 18.5 9 17.83 9 17C9 16.17 8.33 15.5 7.5 15.5C6.67 15.5 6 16.17 6 17C6 17.83 6.67 18.5 7.5 18.5Z" fill="white"/>
+      </svg>
+      <% } else if (status === 'out_for_delivery') { %>
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z" fill="white"/>
+      </svg>
+      <% } else if (status === 'delivered') { %>
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" fill="white"/>
+      </svg>
+      <% } else { %>
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="white"/>
+      </svg>
+      <% } %>
+    </div>
+    <h1 style="color: #333; margin: 0; font-size: 28px; font-weight: 600;">Order Status Update</h1>
+  </div>
+
+  <!-- Main Content -->
+  <div style="background-color: <%= status === 'delivered' ? '#d4edda' : (status === 'shipped' || status === 'out_for_delivery' ? '#d1ecf1' : '#f8f9fa') %>; border-radius: 10px; padding: 25px; margin-bottom: 25px; border-left: 4px solid <%= status === 'delivered' ? '#28a745' : (status === 'shipped' || status === 'out_for_delivery' ? '#17a2b8' : '#667eea') %>;">
+    <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
+      Hello <strong><%= buyerName %></strong>,
+    </p>
+    
+    <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 10px 0;">
+      <% if (status === 'shipped') { %>
+        📦 Great news! Your order has been <strong>shipped</strong>.
+      <% } else if (status === 'out_for_delivery') { %>
+        🚚 Your order is <strong>out for delivery</strong> and should arrive soon!
+      <% } else if (status === 'delivered') { %>
+        ✅ Your order has been successfully <strong>delivered</strong>!
+      <% } else if (status === 'confirmed') { %>
+        ✓ Your order has been <strong>confirmed</strong> and is being prepared.
+      <% } else if (status === 'processing') { %>
+        ⚙️ Your order is now being <strong>processed</strong>.
+      <% } else if (status === 'ready_to_ship') { %>
+        📦 Your order is <strong>ready to ship</strong>.
+      <% } else if (status === 'in_transit') { %>
+        🚛 Your order is <strong>in transit</strong>.
+      <% } else if (status === 'cancelled') { %>
+        ❌ Your order has been <strong>cancelled</strong>.
+      <% } else if (status === 'returned') { %>
+        ↩️ Your order has been <strong>returned</strong>.
+      <% } else { %>
+        📋 Your order status has been updated to <strong><%= status %></strong>.
+      <% } %>
+    </p>
+  </div>
+
+  <!-- Order Details -->
+  <div style="background-color: #fff; border: 2px solid #e9ecef; border-radius: 10px; padding: 20px; margin-bottom: 25px;">
+    <h3 style="color: #667eea; margin: 0 0 15px 0; font-size: 18px; border-bottom: 2px solid #e9ecef; padding-bottom: 10px;">
+      📦 Order Information
+    </h3>
+    
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr>
+        <td style="padding: 10px 0; color: #666; font-size: 14px; width: 40%;">
+          <strong>Order ID:</strong>
+        </td>
+        <td style="padding: 10px 0; color: #333; font-size: 14px; font-weight: 600;">
+          <%= orderId %>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 10px 0; color: #666; font-size: 14px;">
+          <strong>Seller:</strong>
+        </td>
+        <td style="padding: 10px 0; color: #333; font-size: 14px;">
+          <%= sellerName %>
+        </td>
+      </tr>
+      <% if (productName) { %>
+      <tr>
+        <td style="padding: 10px 0; color: #666; font-size: 14px;">
+          <strong>Product/Service:</strong>
+        </td>
+        <td style="padding: 10px 0; color: #333; font-size: 14px;">
+          <%= productName %>
+        </td>
+      </tr>
+      <% } %>
+      <tr>
+        <td style="padding: 10px 0; color: #666; font-size: 14px;">
+          <strong>Current Status:</strong>
+        </td>
+        <td style="padding: 10px 0; color: <%= status === 'delivered' ? '#28a745' : (status === 'cancelled' ? '#dc3545' : '#667eea') %>; font-size: 15px; font-weight: 700; text-transform: uppercase;">
+          <%= status.replace(/_/g, ' ') %>
+        </td>
+      </tr>
+      <% if (trackingNumber) { %>
+      <tr>
+        <td style="padding: 10px 0; color: #666; font-size: 14px;">
+          <strong>Tracking Number:</strong>
+        </td>
+        <td style="padding: 10px 0; color: #333; font-size: 14px; font-family: monospace; background-color: #f8f9fa; padding: 8px; border-radius: 4px;">
+          <%= trackingNumber %>
+        </td>
+      </tr>
+      <% } %>
+      <% if (estimatedDeliveryDate) { %>
+      <tr>
+        <td style="padding: 10px 0; color: #666; font-size: 14px;">
+          <strong>Estimated Delivery:</strong>
+        </td>
+        <td style="padding: 10px 0; color: #333; font-size: 14px; font-weight: 600;">
+          <%= new Date(estimatedDeliveryDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+        </td>
+      </tr>
+      <% } %>
+    </table>
+  </div>
+
+  <!-- Tracking Progress Bar (for shipped/in-transit/out-for-delivery) -->
+  <% if (status === 'shipped' || status === 'in_transit' || status === 'out_for_delivery' || status === 'delivered') { %>
+  <div style="background-color: #fff; border: 2px solid #e9ecef; border-radius: 10px; padding: 20px; margin-bottom: 25px;">
+    <h4 style="color: #667eea; margin: 0 0 20px 0; font-size: 16px;">Delivery Progress</h4>
+    <div style="position: relative; padding: 10px 0;">
+      <div style="height: 4px; background-color: #e9ecef; border-radius: 2px; position: relative;">
+        <div style="height: 4px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 2px; width: <%= status === 'shipped' ? '33%' : (status === 'in_transit' ? '66%' : (status === 'out_for_delivery' ? '90%' : '100%')) %>;"></div>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 11px; color: #666;">
+        <div style="text-align: center;">
+          <div style="width: 12px; height: 12px; background-color: #667eea; border-radius: 50%; margin: 0 auto 5px;"></div>
+          <span>Shipped</span>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 12px; height: 12px; background-color: <%= status === 'in_transit' || status === 'out_for_delivery' || status === 'delivered' ? '#667eea' : '#e9ecef' %>; border-radius: 50%; margin: 0 auto 5px;"></div>
+          <span>In Transit</span>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 12px; height: 12px; background-color: <%= status === 'out_for_delivery' || status === 'delivered' ? '#667eea' : '#e9ecef' %>; border-radius: 50%; margin: 0 auto 5px;"></div>
+          <span>Out for Delivery</span>
+        </div>
+        <div style="text-align: center;">
+          <div style="width: 12px; height: 12px; background-color: <%= status === 'delivered' ? '#28a745' : '#e9ecef' %>; border-radius: 50%; margin: 0 auto 5px;"></div>
+          <span>Delivered</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- CTA Button -->
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="<%= orderUrl %>" 
+       style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; 
+              padding: 14px 35px; text-decoration: none; border-radius: 8px; font-weight: 600; 
+              font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+      View Order Details
+    </a>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e9ecef;">
+    <p style="color: #999; font-size: 13px; line-height: 1.5; margin: 0 0 10px 0;">
+      This is an automated notification from Canadian Bazaar
+    </p>
+    <p style="color: #999; font-size: 12px; margin: 0;">
+      © <%= new Date().getFullYear() %> Canadian Bazaar. All rights reserved.
+    </p>
+  </div>
+
+</div>
+
