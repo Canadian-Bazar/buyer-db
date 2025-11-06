@@ -54,37 +54,73 @@ export const getCategoriesSlugs = async (req, res) => {
   try {
     const { slug } = matchedData(req);
 
-    let filter = { isActive: true };
-
+    // If a slug is provided, return that parent and its direct subcategories in
+    // the format: ["parent", "parent/child", ...]
     if (slug) {
-      const category = await Categories.findOne({ slug });
-      if (!category) {
+      const parent = await Categories.findOne({ slug, isActive: true }).select(
+        '_id slug',
+      );
+      if (!parent) {
         return res
           .status(httpStatus.NOT_FOUND)
           .json(buildResponse(httpStatus.NOT_FOUND, 'Category not found'));
       }
 
-      const categoryIds = new Set([category._id.toString()]);
+      const subcategories = await Categories.find({
+        isActive: true,
+        parentCategory: parent._id,
+      })
+        .select('slug parentCategory -_id')
+        .lean();
 
-      if (category.ancestors?.length) {
-        category.ancestors.forEach((a) => categoryIds.add(a.toString()));
-      }
-
-      const children = await Categories.find({
-        $or: [{ parentCategory: category._id }, { ancestors: category._id }],
-      }).select('_id');
-
-      children.forEach((c) => categoryIds.add(c._id.toString()));
-
-      filter = { ...filter, _id: { $in: Array.from(categoryIds) } };
+      const data = [
+        parent.slug,
+        ...subcategories.map((c) => `${parent.slug}/${c.slug}`),
+      ];
+      return res
+        .status(httpStatus.OK)
+        .json(buildResponse(httpStatus.OK, { data }));
     }
 
-    const categorySlugs = await Categories.find(filter)
-      .select('slug -_id')
-      .lean();
+    // No slug: return all parents (with at least one child) and their direct
+    // subcategories in a single flat list formatted as requested
+    const parentIds = await Categories.distinct('parentCategory', {
+      isActive: true,
+      parentCategory: { $ne: null },
+    });
 
-    const data = categorySlugs.map((c) => c.slug);
+    if (!parentIds.length) {
+      return res
+        .status(httpStatus.OK)
+        .json(buildResponse(httpStatus.OK, { data: [] }));
+    }
 
+    const [parents, children] = await Promise.all([
+      Categories.find({ isActive: true, _id: { $in: parentIds } })
+        .select('_id slug')
+        .lean(),
+      Categories.find({ isActive: true, parentCategory: { $in: parentIds } })
+        .select('slug parentCategory')
+        .lean(),
+    ]);
+
+    // Group children by parentCategory id string
+    const childrenByParentId = children.reduce((acc, child) => {
+      const pid = String(child.parentCategory);
+      if (!acc[pid]) acc[pid] = [];
+      acc[pid].push(child.slug);
+      return acc;
+    }, {});
+
+    // Build flat list in the desired format
+    const data = [];
+    for (const p of parents) {
+      data.push(p.slug);
+      const subs = childrenByParentId[String(p._id)] || [];
+      for (const s of subs) {
+        data.push(`${p.slug}/${s}`);
+      }
+    }
     res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, { data }));
   } catch (err) {
     handleError(res, err);
