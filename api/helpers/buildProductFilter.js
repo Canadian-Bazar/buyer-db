@@ -26,6 +26,9 @@ import mongoose from 'mongoose';
   // Always exclude blocked/archived: treat missing fields as allowed (only exclude when true)
   initialMatch[`${prefix}isBlocked`] = { $ne: true };
   initialMatch[`${prefix}isArchived`] = { $ne: true };
+  initialMatch[`${prefix}completionPercentage`] = { $eq: 100 };
+
+
   if (filterParams?.isActive !== undefined) {
     const isActiveValue = (filterParams.isActive === 'true' || filterParams.isActive === true);
     if (isActiveValue) {

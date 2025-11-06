@@ -30,7 +30,11 @@ const BlogsSchema = new mongoose.Schema({
     coverImage:{
         type:String ,
         required:true ,
-    }
+    } ,
+    coverImageAlt:{
+        type:String ,
+        required:true ,
+    } ,
 } , {collection:"Blog" , timestamps:true})
 
 
