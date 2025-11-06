@@ -24,6 +24,7 @@ export const getServicesController = async (req, res) => {
     const matchStage = {
       isBlocked: false,
       isArchived: false,
+      completionPercentage: { $eq: 100 }
     };
 
     // Show all except explicitly inactive by default or when isActive=true is requested
@@ -249,6 +250,8 @@ export const getServiceDetailsController = async (req, res) => {
     const validatedData = matchedData(req);
     const { identifier } = validatedData;
 
+
+    console.log('Fetching details for service identifier:', identifier);
     if (!identifier) {
       return res.status(httpStatus.BAD_REQUEST).json(
         buildResponse(httpStatus.BAD_REQUEST, null, 'Service identifier is required')
@@ -263,10 +266,10 @@ export const getServiceDetailsController = async (req, res) => {
     const matchQuery = {
       isBlocked: false,
       isArchived: false,
+      completionPercentage: { $eq: 100 },
       // Allow fetching even if incomplete; UI can handle presentation
       // completionPercentage: 100,
       // Consider any service active unless explicitly false
-      isActive: { $ne: false }
     };
 
     if (isObjectId) {
@@ -276,188 +279,195 @@ export const getServiceDetailsController = async (req, res) => {
     }
 
 
+    console.log(matchQuery)
+
+
     pipeline.push({
       $match: matchQuery
     });
 
-    pipeline.push({
-      $lookup: {
-        from: 'Sellers',
-        localField: 'seller',
-        foreignField: '_id',
-        as: 'sellerInfo'
-      }
-    });
-    pipeline.push({
-      $unwind: '$sellerInfo'
-    });
+    // pipeline.push({
+    //   $lookup: {
+    //     from: 'Sellers',
+    //     localField: 'seller',
+    //     foreignField: '_id',
+    //     as: 'sellerInfo'
+    //   }
+    // });
+    // pipeline.push({
+    //   $unwind: '$sellerInfo'
+    // });
 
-    pipeline.push({
-      $lookup: {
-        from: 'Category',
-        localField: 'category',
-        foreignField: '_id',
-        as: 'categoryInfo'
-      }
-    });
-    pipeline.push({
-      $unwind: {
-        path: '$categoryInfo',
-        preserveNullAndEmptyArrays: true
-      }
-    });
+    // pipeline.push({
+    //   $lookup: {
+    //     from: 'Category',
+    //     localField: 'category',
+    //     foreignField: '_id',
+    //     as: 'categoryInfo'
+    //   }
+    // });
+    // pipeline.push({
+    //   $unwind: {
+    //     path: '$categoryInfo',
+    //     preserveNullAndEmptyArrays: true
+    //   }
+    // });
 
-    pipeline.push({
-      $lookup: {
-        from: 'ServicePricing',
-        localField: '_id',
-        foreignField: 'serviceId',
-        as: 'pricing'
-      }
-    });
-    pipeline.push({
-      $unwind: {
-        path: '$pricing',
-        preserveNullAndEmptyArrays: true
-      }
-    });
+    // pipeline.push({
+    //   $lookup: {
+    //     from: 'ServicePricing',
+    //     localField: '_id',
+    //     foreignField: 'serviceId',
+    //     as: 'pricing'
+    //   }
+    // });
+    // pipeline.push({
+    //   $unwind: {
+    //     path: '$pricing',
+    //     preserveNullAndEmptyArrays: true
+    //   }
+    // });
 
-    pipeline.push({
-      $lookup: {
-        from: 'ServiceMedia',
-        localField: '_id',
-        foreignField: 'serviceId',
-        as: 'media'
-      }
-    });
-    pipeline.push({
-      $unwind: {
-        path: '$media',
-        preserveNullAndEmptyArrays: true
-      }
-    });
+    // pipeline.push({
+    //   $lookup: {
+    //     from: 'ServiceMedia',
+    //     localField: '_id',
+    //     foreignField: 'serviceId',
+    //     as: 'media'
+    //   }
+    // });
+    // pipeline.push({
+    //   $unwind: {
+    //     path: '$media',
+    //     preserveNullAndEmptyArrays: true
+    //   }
+    // });
 
-    pipeline.push({
-      $lookup: {
-        from: 'ServiceOrderSchema',
-        localField: '_id',
-        foreignField: 'serviceId',
-        as: 'orderInfo'
-      }
-    });
-    pipeline.push({
-      $unwind: {
-        path: '$orderInfo',
-        preserveNullAndEmptyArrays: true
-      }
-    });
+    // pipeline.push({
+    //   $lookup: {
+    //     from: 'ServiceOrderSchema',
+    //     localField: '_id',
+    //     foreignField: 'serviceId',
+    //     as: 'orderInfo'
+    //   }
+    // });
+    // pipeline.push({
+    //   $unwind: {
+    //     path: '$orderInfo',
+    //     preserveNullAndEmptyArrays: true
+    //   }
+    // });
 
-    pipeline.push({
-      $lookup: {
-        from: 'ServiceCustomization',
-        localField: '_id',
-        foreignField: 'serviceId',
-        as: 'customization'
-      }
-    });
-    pipeline.push({
-      $unwind: {
-        path: '$customization',
-        preserveNullAndEmptyArrays: true
-      }
-    });
+    // pipeline.push({
+    //   $lookup: {
+    //     from: 'ServiceCustomization',
+    //     localField: '_id',
+    //     foreignField: 'serviceId',
+    //     as: 'customization'
+    //   }
+    // });
+    // pipeline.push({
+    //   $unwind: {
+    //     path: '$customization',
+    //     preserveNullAndEmptyArrays: true
+    //   }
+    // });
 
-    pipeline.push({
-      $lookup: {
-        from: 'SerivesProcessAndCapability',
-        localField: '_id',
-        foreignField: 'serviceId',
-        as: 'capabilities'
-      }
-    });
-    pipeline.push({
-      $unwind: {
-        path: '$capabilities',
-        preserveNullAndEmptyArrays: true
-      }
-    });
+    // pipeline.push({
+    //   $lookup: {
+    //     from: 'SerivesProcessAndCapability',
+    //     localField: '_id',
+    //     foreignField: 'serviceId',
+    //     as: 'capabilities'
+    //   }
+    // });
+    // pipeline.push({
+    //   $unwind: {
+    //     path: '$capabilities',
+    //     preserveNullAndEmptyArrays: true
+    //   }
+    // });
 
-    pipeline.push({
-      $project: {
-        name: 1,
-        description: 1,
-        slug: 1,
-        avgRating: 1,
-        ratingsCount: 1,
-        isComplete: 1,
-        completionPercentage: 1,
-        incompleteSteps: 1,
-        stepStatus: 1,
-        createdAt: 1,
-        updatedAt: 1,
+    // pipeline.push({
+    //   $project: {
+    //     name: 1,
+    //     description: 1,
+    //     slug: 1,
+    //     avgRating: 1,
+    //     ratingsCount: 1,
+    //     isComplete: 1,
+    //     completionPercentage: 1,
+    //     incompleteSteps: 1,
+    //     stepStatus: 1,
+    //     createdAt: 1,
+    //     updatedAt: 1,
 
-        seller: {
-          _id: '$sellerInfo._id',
-          companyName: '$sellerInfo.companyName',
-          email: '$sellerInfo.email',
-          phone: '$sellerInfo.phone',
-          city: '$sellerInfo.city',
-          state: '$sellerInfo.state',
-          zip: '$sellerInfo.zip',
-          street: '$sellerInfo.street',
-          isVerified: '$sellerInfo.isVerified',
-          logo: '$sellerInfo.logo',
-          companyWebsite: '$sellerInfo.companyWebsite',
-          yearEstablished: '$sellerInfo.yearEstablished',
-          numberOfEmployees: '$sellerInfo.numberOfEmployees',
-          certifications: '$sellerInfo.certifications',
-          socialMediaLinks: '$sellerInfo.socialMediaLinks'
-        },
+    //     seller: {
+    //       _id: '$sellerInfo._id',
+    //       companyName: '$sellerInfo.companyName',
+    //       email: '$sellerInfo.email',
+    //       phone: '$sellerInfo.phone',
+    //       city: '$sellerInfo.city',
+    //       state: '$sellerInfo.state',
+    //       zip: '$sellerInfo.zip',
+    //       street: '$sellerInfo.street',
+    //       isVerified: '$sellerInfo.isVerified',
+    //       logo: '$sellerInfo.logo',
+    //       companyWebsite: '$sellerInfo.companyWebsite',
+    //       yearEstablished: '$sellerInfo.yearEstablished',
+    //       numberOfEmployees: '$sellerInfo.numberOfEmployees',
+    //       certifications: '$sellerInfo.certifications',
+    //       socialMediaLinks: '$sellerInfo.socialMediaLinks'
+    //     },
 
-        category: {
-          _id: '$categoryInfo._id',
-          name: '$categoryInfo.name'
-        },
+    //     category: {
+    //       _id: '$categoryInfo._id',
+    //       name: '$categoryInfo.name'
+    //     },
 
-        pricing: {
-          perModelPrice: '$pricing.perModelPrice',
-          perHourPrice: '$pricing.perHourPrice',
-          perBatchPrice: '$pricing.perBatchPrice',
-          volume: '$pricing.volume',
-          customQuoteEnabled: '$pricing.customQuoteEnabled'
-        },
+    //   //   pricing: {
+    //   //     perModelPrice: '$pricing.perModelPrice',
+    //   //     perHourPrice: '$pricing.perHourPrice',
+    //   //     perBatchPrice: '$pricing.perBatchPrice',
+    //   //     volume: '$pricing.volume',
+    //   //     customQuoteEnabled: '$pricing.customQuoteEnabled'
+    //   //   },
 
-        media: {
-          images: '$media.images',
-          videos: '$media.videos',
-          warranty: '$media.warranty',
-          industryCertifications: '$media.industryCertifications',
-          brochure: '$media.brochure'
-        },
+    //   //   media: {
+    //   //     images: '$media.images',
+    //   //     videos: '$media.videos',
+    //   //     warranty: '$media.warranty',
+    //   //     industryCertifications: '$media.industryCertifications',
+    //   //     brochure: '$media.brochure'
+    //   //   },
 
-        orderInfo: {
-          moq: '$orderInfo.moq',
-          standardLeadTime: '$orderInfo.standardLeadTime',
-          rushOptions: '$orderInfo.rushOptions'
-        },
+    //   //   orderInfo: {
+    //   //     moq: '$orderInfo.moq',
+    //   //     standardLeadTime: '$orderInfo.standardLeadTime',
+    //   //     rushOptions: '$orderInfo.rushOptions'
+    //   //   },
 
-        customization: {
-          designImages: '$customization.designImages',
-          logo: '$customization.logo',
-          colorChoices: '$customization.colorChoices',
-          rapidPrototype: '$customization.rapidPrototype'
-        },
+    //   //   customization: {
+    //   //     designImages: '$customization.designImages',
+    //   //     logo: '$customization.logo',
+    //   //     colorChoices: '$customization.colorChoices',
+    //   //     rapidPrototype: '$customization.rapidPrototype'
+    //   //   },
 
-        capabilities: {
-          processType: '$capabilities.processType',
-          materialsSupported: '$capabilities.materialsSupported',
-          surfaceFinishAndCoatings: '$capabilities.surfaceFinishAndCoatings',
-          tolerance: '$capabilities.tolerance'
-        }
-      }
-    });
+    //   //   capabilities: {
+    //   //     processType: '$capabilities.processType',
+    //   //     materialsSupported: '$capabilities.materialsSupported',
+    //   //     surfaceFinishAndCoatings: '$capabilities.surfaceFinishAndCoatings',
+    //   //     tolerance: '$capabilities.tolerance'
+    //   //   }
+    //   }
+    // });
 
     const serviceDetails = await Service.aggregate(pipeline);
+
+
+
+    console.log('Service details fetched:', serviceDetails);
 
 
     if (!serviceDetails.length) {

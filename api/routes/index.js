@@ -30,6 +30,8 @@ import cncQuotesRoutes from './cnc-quotes.routes.js'
 import locationRoutes from './location.routes.js'
 import seoRoutes from './seo.routes.js'
 import globalParagraphRoutes from './global-paragraph.routes.js'
+import slugRoutes from '../routes/slugs.routes.js'
+import { v1 } from 'uuid'
 
 const v1Routes = express.Router()
 const router = express.Router()
@@ -65,6 +67,7 @@ v1Routes.use('/locations', locationRoutes)
 v1Routes.use('/internal', internalRoutes)
 v1Routes.use('/seo', seoRoutes)
 v1Routes.use('/global-paragraph', globalParagraphRoutes)
+v1Routes.use('/slugs', slugRoutes)
 
 
 
