@@ -51,6 +51,8 @@ init().then((dbStatus) => {
 
   api.use(bodyParser.json({ limit: '32mb' }))
   api.use(bodyParser.urlencoded({ limit: '32mb', extended: false }))
+  app.use(require('prerender-node').set('prerenderToken', '4LgvNTnOgDYr3n5roQcq'));
+
   api.use(cookieParser())
   api.use(
     cors({
