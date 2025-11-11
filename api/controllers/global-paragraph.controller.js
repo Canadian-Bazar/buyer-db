@@ -8,7 +8,15 @@ import handleError from '../utils/handleError.js'
 // Public endpoint - no authentication needed
 export const getGlobalParagraphController = async (req, res) => {
   try {
-    const pathParam = (req.query.path || '/').toString().trim().toLowerCase()
+    let pathParam = (req.query.path || '/').toString().trim().toLowerCase()
+
+    // Normalize path: ensure leading slash, collapse duplicate slashes,
+    // and ensure a trailing slash for non-root paths to match stored format
+    if (!pathParam.startsWith('/')) pathParam = '/' + pathParam
+    pathParam = pathParam.replace(/\/{2,}/g, '/')
+    if (pathParam.length > 1 && !pathParam.endsWith('/')) {
+      pathParam = pathParam + '/'
+    }
 
     if (!pathParam) {
       return res
