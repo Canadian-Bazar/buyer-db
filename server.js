@@ -29,6 +29,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const api = express();
+// Behind a proxy/CDN (e.g., CloudFront/Amplify), this ensures req.ip and SSL are detected correctly
+api.set('trust proxy', true);
 
 // Optional IP allowlist for integrations (comma-separated in env)
 const integrationAllowlist = new Set(
@@ -79,7 +81,8 @@ init().then((dbStatus) => {
         process.env.FRONTEND_URL,
         'http://localhost:5173',
         'https://canadian-bazaar.ca',
-        ' http://192.168.29.187:5173',
+        'https://www.canadian-bazaar.ca',
+        'http://192.168.29.187:5173',
       ],
     }),
   );
