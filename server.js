@@ -14,7 +14,6 @@ import httpStatus from 'http-status';
 import morgan from 'morgan';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import prerender from 'prerender-node';
 
 import v1Routes from './api/routes/index.js';
 import buildErrorObject from './api/utils/buildErrorObject.js';
@@ -80,6 +79,7 @@ init().then((dbStatus) => {
       origin: [
         process.env.FRONTEND_URL,
         'http://localhost:5173',
+        'http://localhost:3000',
         'https://canadian-bazaar.ca',
         'https://www.canadian-bazaar.ca',
         'http://192.168.29.187:5173',
@@ -89,7 +89,17 @@ init().then((dbStatus) => {
 
   // Prerender middleware (set token via env PRERENDER_TOKEN)
   if (process.env.PRERENDER_TOKEN) {
-    api.use(prerender.set('prerenderToken', process.env.PRERENDER_TOKEN));
+    // Load prerender-node only if installed; avoid hard dependency
+    import('prerender-node')
+      .then((mod) => {
+        const prerender = mod?.default || mod;
+        if (prerender) {
+          api.use(prerender.set('prerenderToken', process.env.PRERENDER_TOKEN));
+        }
+      })
+      .catch(() => {
+        console.warn('[startup] prerender-node not installed; skipping prerender middleware');
+      });
   }
 
   api.use('/public', express.static(path.join(__dirname, 'public')));
