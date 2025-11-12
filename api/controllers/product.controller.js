@@ -161,6 +161,49 @@ export const getProductInfoController = async(req, res) => {
           // isActive: true
         }
       },
+      // Join seller and enrich minimal fields needed by UI
+      {
+        $lookup: {
+          from: 'Sellers',
+          localField: 'seller',
+          foreignField: '_id',
+          as: 'sellerData'
+        }
+      },
+      { $unwind: { path: '$sellerData', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'BusinessType',
+          localField: 'sellerData.businessType',
+          foreignField: '_id',
+          as: 'businessTypeData'
+        }
+      },
+      { $unwind: { path: '$businessTypeData', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'Category',
+          localField: 'categoryId',
+          foreignField: '_id',
+          as: 'categoryData'
+        }
+      },
+      { $unwind: { path: '$categoryData', preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          seller: {
+            _id: '$sellerData._id',
+            companyName: '$sellerData.companyName',
+            state: '$sellerData.state',
+            logo: '$sellerData.logo',
+            createdAt: '$sellerData.createdAt',
+            businessType: { $ifNull: [{ $ifNull: ['$businessTypeData.name', null] }, null] },
+            companyWebsite: '$sellerData.companyWebsite'
+          },
+          categoryName: { $ifNull: ['$categoryData.name', null] }
+        }
+      },
+      { $unset: ['sellerData', 'businessTypeData', 'categoryData'] },
       
 //       {
 //         $facet: {

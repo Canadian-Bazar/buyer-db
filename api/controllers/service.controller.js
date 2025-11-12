@@ -141,6 +141,70 @@ export const getServicesController = async (req, res) => {
       }
     });
 
+    // Include pricing (perModelPrice/perHourPrice/perBatchPrice/customQuoteEnabled/volume/leadTime)
+    pipeline.push({
+      $lookup: {
+        from: 'ServicePricing',
+        localField: '_id',
+        foreignField: 'serviceId',
+        as: 'pricing'
+      }
+    });
+    pipeline.push({
+      $unwind: {
+        path: '$pricing',
+        preserveNullAndEmptyArrays: true
+      }
+    });
+
+    // Include order info (moq, standardLeadTime, rushOptions)
+    pipeline.push({
+      $lookup: {
+        from: 'ServiceOrderSchema',
+        localField: '_id',
+        foreignField: 'serviceId',
+        as: 'orderInfo'
+      }
+    });
+    pipeline.push({
+      $unwind: {
+        path: '$orderInfo',
+        preserveNullAndEmptyArrays: true
+      }
+    });
+
+    // Include customization (designImages, logo, colorChoices, rapidPrototype)
+    pipeline.push({
+      $lookup: {
+        from: 'ServiceCustomization',
+        localField: '_id',
+        foreignField: 'serviceId',
+        as: 'customization'
+      }
+    });
+    pipeline.push({
+      $unwind: {
+        path: '$customization',
+        preserveNullAndEmptyArrays: true
+      }
+    });
+
+    // Include capabilities (processType, materialsSupported, surfaceFinishAndCoatings, tolerance)
+    pipeline.push({
+      $lookup: {
+        from: 'SerivesProcessAndCapability',
+        localField: '_id',
+        foreignField: 'serviceId',
+        as: 'capabilities'
+      }
+    });
+    pipeline.push({
+      $unwind: {
+        path: '$capabilities',
+        preserveNullAndEmptyArrays: true
+      }
+    });
+
     pipeline.push({
       $lookup: {
         from: 'Category',
@@ -286,17 +350,49 @@ export const getServiceDetailsController = async (req, res) => {
       $match: matchQuery
     });
 
-    // pipeline.push({
-    //   $lookup: {
-    //     from: 'Sellers',
-    //     localField: 'seller',
-    //     foreignField: '_id',
-    //     as: 'sellerInfo'
-    //   }
-    // });
-    // pipeline.push({
-    //   $unwind: '$sellerInfo'
-    // });
+    // Enrich seller information for UI
+    pipeline.push({
+      $lookup: {
+        from: 'Sellers',
+        localField: 'seller',
+        foreignField: '_id',
+        as: 'sellerInfo'
+      }
+    });
+    pipeline.push({
+      $unwind: { path: '$sellerInfo', preserveNullAndEmptyArrays: true }
+    });
+
+    // Attach seller object with minimal fields the UI expects
+    pipeline.push({
+      $addFields: {
+        seller: {
+          _id: '$sellerInfo._id',
+          companyName: '$sellerInfo.companyName',
+          state: '$sellerInfo.state',
+          logo: '$sellerInfo.logo',
+          companyWebsite: '$sellerInfo.companyWebsite',
+          businessType: '$sellerInfo.businessType'
+        }
+      }
+    });
+    pipeline.push({ $unset: ['sellerInfo'] });
+
+    // Include media for images/videos expected by UI
+    pipeline.push({
+      $lookup: {
+        from: 'ServiceMedia',
+        localField: '_id',
+        foreignField: 'serviceId',
+        as: 'media'
+      }
+    });
+    pipeline.push({
+      $unwind: {
+        path: '$media',
+        preserveNullAndEmptyArrays: true
+      }
+    });
 
     // pipeline.push({
     //   $lookup: {
