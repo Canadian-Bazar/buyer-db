@@ -83,6 +83,7 @@ init().then((dbStatus) => {
         'https://canadian-bazaar.ca',
         'https://www.canadian-bazaar.ca',
         'http://192.168.29.187:5173',
+        'https://dev.canadian-bazaar.ca'
       ],
     }),
   );
