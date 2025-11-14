@@ -1,13 +1,23 @@
 import mongoose from 'mongoose'
 import aggregatePaginate from 'mongoose-aggregate-paginate-v2'
 import paginate from 'mongoose-paginate-v2'
+import { slugify, generateUniqueSlug } from '../utils/slug.js'
 
-const SellerSchema = new mongoose.Schema({ 
+const SellerSchema = new mongoose.Schema({
     companyName: {
-          type: String,
-          required: true,
-          trim: true,
-     },
+        type: String,
+        required: true,
+        trim: true,
+    },
+
+    slug: {
+        type: String,
+        unique: true,
+        index: true,
+        sparse: true,
+        lowercase: true,
+        trim: true,
+    },
 
      phone: {
           type: String,
@@ -146,4 +156,23 @@ const SellerSchema = new mongoose.Schema({
   SellerSchema.plugin(paginate)
   SellerSchema.plugin(aggregatePaginate)
 
-  export default mongoose.model('Seller', SellerSchema)
+SellerSchema.pre('save', async function handleSlug(next) {
+    try {
+        if (!this.isModified('companyName') && this.slug) {
+            return next()
+        }
+
+        const baseSlug = slugify(this.companyName, 'seller')
+        this.slug = await generateUniqueSlug(
+            this.constructor,
+            baseSlug,
+            this._id,
+            'seller'
+        )
+        return next()
+    } catch (err) {
+        return next(err)
+    }
+})
+
+export default mongoose.model('Seller', SellerSchema)

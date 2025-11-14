@@ -2,17 +2,22 @@ import { check } from "express-validator"
 import validateRequest from "../utils/validateRequest.js"
 import mongoose from "mongoose"
 
+const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
 export const validateGetSellerProfile = [
     check('sellerId')
         .isString()
-        .withMessage('Seller ID must be a string')
+        .withMessage('Seller identifier must be a string')
         .custom((value) => {
-            if (!mongoose.Types.ObjectId.isValid(value)) {
-                throw new Error('Seller ID must be a valid MongoDB ObjectId')
+            if (
+                !mongoose.Types.ObjectId.isValid(value) &&
+                !slugPattern.test(value)
+            ) {
+                throw new Error('Seller identifier must be a valid ObjectId or slug')
             }
             return true
         }),
-    
+
     (req, res, next) => validateRequest(req, res, next)
 ]
 

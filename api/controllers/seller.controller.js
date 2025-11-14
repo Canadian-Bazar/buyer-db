@@ -7,16 +7,81 @@ import Product from '../models/products.schema.js'
 import Service from '../models/service.schema.js'
 import mongoose from 'mongoose'
 
+const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
+const escapeRegex = (str = '') =>
+    str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+const slugToCompanyRegex = (slug) => {
+    const parts = slug
+        ?.split('-')
+        ?.filter(Boolean)
+        .map((segment) => escapeRegex(segment))
+
+    if (!parts || parts.length === 0) return null
+
+    // Allow flexible separators between words (spaces, punctuation, etc.)
+    const separator = '[\\s&@#%+.,-]*'
+    return new RegExp(
+        `^${separator}${parts.join(separator)}${separator}$`,
+        'i'
+    )
+}
+
+const buildSellerQueries = (identifier) => {
+    if (mongoose.Types.ObjectId.isValid(identifier)) {
+        return [{ _id: new mongoose.Types.ObjectId(identifier) }]
+    }
+
+    const queries = []
+
+    if (slugPattern.test(identifier)) {
+        queries.push({ slug: identifier.toLowerCase() })
+        const companyRegex = slugToCompanyRegex(identifier)
+        if (companyRegex) {
+            queries.push({ companyName: companyRegex })
+        }
+        return queries
+    }
+
+    const companyRegex = slugToCompanyRegex(identifier)
+    if (companyRegex) {
+        queries.push({ companyName: companyRegex })
+    }
+
+    return queries
+}
+
 export const getSellerProfileController = async (req, res) => {
     try {
         const validatedData = matchedData(req)
         const { sellerId } = validatedData
 
-        const seller = await Seller.findById(sellerId)
-            // Exclude only sensitive/internal fields; return contact/registration & timestamps for profile modal
-            .select('-password -stripeCustomerId -__v')
-            .populate('categories businessType')
-            .lean()
+        const sellerQueries = buildSellerQueries(sellerId)
+
+        if (!sellerQueries.length) {
+            return res.status(httpStatus.UNPROCESSABLE_ENTITY).json(
+                buildResponse(
+                    httpStatus.UNPROCESSABLE_ENTITY,
+                    'Invalid seller identifier'
+                )
+            )
+        }
+
+        let seller = null
+        // Attempt queries in priority order
+        for (const query of sellerQueries) {
+            // eslint-disable-next-line no-await-in-loop
+            const candidate = await Seller.findOne(query)
+                .select('-password -stripeCustomerId -__v')
+                .populate('categories businessType')
+                .lean()
+
+            if (candidate) {
+                seller = candidate
+                break
+            }
+        }
 
         if (!seller) {
             return res.status(httpStatus.NOT_FOUND).json(
@@ -32,8 +97,10 @@ export const getSellerProfileController = async (req, res) => {
         }
 
         // Fetch products
-        const products = await Product.find({ 
-            seller: sellerId,
+        const sellerObjectId = seller._id
+
+        const products = await Product.find({
+            seller: sellerObjectId,
             isComplete: true,
             isBlocked: false,
             isArchived: false
@@ -44,8 +111,8 @@ export const getSellerProfileController = async (req, res) => {
         .lean()
 
         // Fetch services
-        const services = await Service.find({ 
-            seller: sellerId,
+        const services = await Service.find({
+            seller: sellerObjectId,
             isComplete: true,
             isBlocked: false,
             isArchived: false
