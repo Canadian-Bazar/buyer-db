@@ -1,11 +1,11 @@
-import { check } from "express-validator"
+import { check, param } from "express-validator"
 import validateRequest from "../utils/validateRequest.js"
 import mongoose from "mongoose"
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 export const validateGetSellerProfile = [
-    check('sellerId')
+    param('sellerId')
         .isString()
         .withMessage('Seller identifier must be a string')
         .custom((value) => {
